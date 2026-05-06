@@ -1787,9 +1787,9 @@
     // 宽度分配
     var LW      = Math.round(BW*0.215);      // 左农历区
     var RW      = Math.round(BW*0.225);      // 右干支区
-    var YI_W    = Math.round(BW*0.210);      // 宜栏宽
-    var JI_W    = Math.round(BW*0.210);      // 忌栏宽
-    var MID_W   = BW-YI_W-JI_W;             // 中间宽
+    var YI_W    = Math.round(BW*0.150);      // 宜栏宽（收窄到15%）
+    var JI_W    = Math.round(BW*0.150);      // 忌栏宽（收窄到15%）
+    var MID_W   = BW-YI_W-JI_W;             // 中间宽（自动变宽到70%）
     var dirLblW = Math.round(BW*0.088);      // 方位标签宽
     var D_LW    = Math.round(BW*0.112);      // 日期行左宽
     var D_RW    = Math.round(BW*0.112);      // 日期行右宽
@@ -2089,7 +2089,7 @@
       if(i>0) vline(midColX+i*hColW, tsColY, hBotY, BROWN2, 1);
 
       var cy = tsColY+Math.round(tsColH*0.018);
-      var hFSz  = Math.round(hColW*0.28);
+      var hFSz  = Math.round(hColW*0.38);  // 字体继续放大（从0.35改为0.38）
       var hLnH  = Math.round(hFSz*1.32);
 
       // 时辰名竖排（粗体）

@@ -1066,6 +1066,9 @@
       renderPersonalHours(res.personal_hour_table);
       renderHourLuckChart(res.personal.hour_luck_chart);
       secBazi.classList.remove('hidden');
+      // 显示八字状态条（个性化版需要显示）
+      var baziBar = document.getElementById('baziStatusBar');
+      if(baziBar) baziBar.style.display = 'flex';
       // 隐藏半球标识横幅
       var banner = document.getElementById('hemiBanner');
       if(banner) banner.style.display = 'none';
@@ -1096,6 +1099,9 @@
       secBazi.classList.add('hidden');
       var secWard = document.getElementById('secWardrobe');
       if(secWard) secWard.style.display = 'none';
+      // 隐藏八字状态条（三源道长版不需要八字）
+      var baziBar = document.getElementById('baziStatusBar');
+      if(baziBar) baziBar.style.display = 'none';
       mainContent.classList.remove('hidden');
     });
   });
@@ -1647,18 +1653,25 @@
 
   // ── 下载黄历 PNG（纯 Canvas 绘制，不依赖 DOM 截图）────
   document.getElementById('btnDownloadPng').addEventListener('click', function(){
+    console.log('下载按钮被点击');
+    console.log('currentDay:', currentDay);
+    console.log('currentMode:', currentMode);
+
     if(!currentDay){ showError('请先生成黄历，再下载。'); return; }
 
     // 三源道长版：使用固定母版绘制（异步）
     if(currentMode === 'daozhang') {
+      console.log('开始生成三源道长版PNG');
       drawFromMasterTemplate(currentDay, currentHours || [], currentPersonal)
         .then(function(png){
+          console.log('PNG生成成功');
           var link = document.createElement('a');
           link.download = '财神黄历_' + (dateInput.value || todayStr) + '.png';
           link.href = png;
           link.click();
         })
         .catch(function(e){
+          console.error('PNG生成失败:', e);
           showError('导出失败：' + e.message);
         });
       return;
@@ -2417,32 +2430,31 @@
     return cv.toDataURL('image/png');
   }
 
-  // ── 三源道长版 Canvas 绘制（参考图2布局：神像卡 + 印章 + 表格）────
+  // ── 三源道长版 Canvas 绘制（传统海报风格 - 基于 sanyuan_daozhang_enhanced.html）────
   function drawDaozhangCanvas(day, hours){
-    var W = 1320, H = 1980;
+    // 画布尺寸：720×960 (3:4 比例)
+    var W = 720, H = 960;
     var cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     var c = cv.getContext('2d');
 
-    // 颜色（图2配色：宣纸米黄底 + 深蓝 + 朱红印 + 金）
-    var BG       = '#f4ede0';   // 米黄底（宣纸感）
-    var NAVY     = '#1a2f4f';   // 深蓝（标题栏 / 横幅）
-    var NAVY_D   = '#0f1f3a';
-    var GOLD     = '#d4af37';   // 金
-    var GOLD2    = '#f0d57a';
-    var DARK     = '#2c1a00';   // 正文深棕
-    var BLUE_L   = '#3d6a8c';   // 主蓝（边框）
-    var TXT_BLUE = '#4a6f99';   // 副蓝
-    var GREEN_C  = '#2d6a30';
-    var RED_C    = '#a0222a';   // 朱红（宜/印章）
-    var RED_D    = '#7a1a20';   // 深朱红
-    var INK      = '#222';
+    // 颜色常量
+    var NAVY_DARK = '#0a1929';
+    var NAVY = '#1a3a5f';
+    var GOLD = '#d4af37';
+    var GOLD_LIGHT = '#f0d57a';
+    var BG_LIGHT = '#f8f9fa';
+    var BG_GRAY = '#e9ecef';
+    var TEXT_DARK = '#1a3a5f';
+    var RED = '#c41e3a';
+    var RED_DARK = '#8b1a2a';
+    var GREEN = '#2d6a30';
+    var GRAY = '#6c757d';
 
-    // ── 工具函数 ──
-    function rect(x,y,w,h,fill,stroke,lw){
-      c.beginPath(); c.rect(x,y,w,h);
-      if(fill){ c.fillStyle=fill; c.fill(); }
-      if(stroke){ c.strokeStyle=stroke; c.lineWidth=lw||1.5; c.stroke(); }
+    // 工具函数
+    function rect(x,y,w,h,fill){
+      c.fillStyle = fill;
+      c.fillRect(x,y,w,h);
     }
     function rrect(x,y,w,h,r,fill,stroke,lw){
       c.beginPath();
@@ -2452,824 +2464,922 @@
       c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y);
       c.closePath();
       if(fill){ c.fillStyle=fill; c.fill(); }
-      if(stroke){ c.strokeStyle=stroke; c.lineWidth=lw||1.5; c.stroke(); }
+      if(stroke){ c.strokeStyle=stroke; c.lineWidth=lw||2; c.stroke(); }
     }
-    function hline(y,x1,x2,col,lw){ c.beginPath(); c.moveTo(x1,y); c.lineTo(x2,y); c.strokeStyle=col||BLUE_L; c.lineWidth=lw||1; c.stroke(); }
-    function vline(x,y1,y2,col,lw){ c.beginPath(); c.moveTo(x,y1); c.lineTo(x,y2); c.strokeStyle=col||BLUE_L; c.lineWidth=lw||1; c.stroke(); }
     function txt(str,x,y,font,fill,align,baseline){
-      c.font=font; c.fillStyle=fill||DARK;
+      c.font=font; c.fillStyle=fill||TEXT_DARK;
       c.textAlign=align||'left'; c.textBaseline=baseline||'top';
       c.fillText(str,x,y);
     }
-    function circle(x,y,r,fill,stroke,slw){
+    function circle(x,y,r,fill,stroke,lw){
       c.beginPath(); c.arc(x,y,r,0,Math.PI*2);
       if(fill){ c.fillStyle=fill; c.fill(); }
-      if(stroke){ c.strokeStyle=stroke; c.lineWidth=slw||2; c.stroke(); }
+      if(stroke){ c.strokeStyle=stroke; c.lineWidth=lw||2; c.stroke(); }
     }
-    // 八卦+太极
-    function bagua(cx,cy,r){
-      c.save();
-      c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.fillStyle='#f5e6b3'; c.fill();
-      c.strokeStyle=GOLD; c.lineWidth=4; c.stroke();
-      // 太极
-      c.beginPath(); c.arc(cx,cy,r*0.62,-Math.PI/2,Math.PI/2); c.fillStyle=NAVY; c.fill();
-      c.beginPath(); c.arc(cx,cy-r*0.31,r*0.31,0,Math.PI*2); c.fillStyle='#f5e6b3'; c.fill();
-      c.beginPath(); c.arc(cx,cy+r*0.31,r*0.31,0,Math.PI*2); c.fillStyle=NAVY; c.fill();
-      circle(cx,cy-r*0.31,r*0.09,NAVY);
-      circle(cx,cy+r*0.31,r*0.09,'#f5e6b3');
-      // 8 trigrams (gold ticks outside)
-      for(var i=0;i<8;i++){
-        var a = i*Math.PI/4 - Math.PI/2;
-        var x1 = cx + Math.cos(a)*r*0.78, y1 = cy + Math.sin(a)*r*0.78;
-        var x2 = cx + Math.cos(a)*r*0.95, y2 = cy + Math.sin(a)*r*0.95;
-        c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2);
-        c.strokeStyle=GOLD; c.lineWidth=3; c.stroke();
-      }
-      c.restore();
-    }
-    // 小罗盘（井字格 + 红色高亮方位）
-    function smallCompass(cx,cy,r,dir){
-      c.save();
-      // 外圆
-      circle(cx,cy,r,'#fff','#999',1);
-      // 内方框（井字）
-      var d = r*1.7;
-      var bx = cx - d/2, by = cy - d/2;
-      rect(bx, by, d, d, '#fafbfc', '#aab', 1);
-      // 中线
-      hline(cy, bx, bx+d, '#bbc', 1);
-      vline(cx, by, by+d, '#bbc', 1);
-      // 高亮方位（红色块）
-      var dirOffset = {
-        '北':[0,-1], '南':[0,1],
-        '东':[1,0], '西':[-1,0],
-        '东北':[1,-1], '东南':[1,1],
-        '西北':[-1,-1], '西南':[-1,1]
-      };
-      var off = dirOffset[dir];
-      if(off){
-        var cell = d/3;
-        var hx = cx + off[0]*cell - cell*0.4;
-        var hy = cy + off[1]*cell - cell*0.4;
-        rect(hx, hy, cell*0.8, cell*0.8, 'rgba(160,34,42,0.55)', RED_C, 1);
-      }
-      // 方向汉字
-      txt('北', cx, by+5, 'bold 9px "STKaiti","PingFang SC",serif', '#666', 'center','top');
-      txt('南', cx, by+d-5, 'bold 9px "STKaiti","PingFang SC",serif', '#666', 'center','bottom');
-      txt('西', bx+5, cy, 'bold 9px "STKaiti","PingFang SC",serif', '#666', 'left','middle');
-      txt('东', bx+d-5, cy, 'bold 9px "STKaiti","PingFang SC",serif', '#666', 'right','middle');
-      c.restore();
-    }
-    // 简化神像（朝服画像）
-    function deityPortrait(cx, topY, bw, bh, robeColor){
-      // 卡片底
-      rrect(cx-bw/2, topY, bw, bh, 8, '#fffaf0', GOLD, 2);
-      // 山水底纹（淡）
-      c.save();
-      c.globalAlpha = 0.18;
-      c.fillStyle = '#a8c0d8';
-      c.beginPath();
-      c.moveTo(cx-bw/2+4, topY+bh-6);
-      c.lineTo(cx-bw*0.30, topY+bh*0.55);
-      c.lineTo(cx-bw*0.10, topY+bh*0.70);
-      c.lineTo(cx+bw*0.10, topY+bh*0.50);
-      c.lineTo(cx+bw*0.30, topY+bh*0.65);
-      c.lineTo(cx+bw/2-4, topY+bh-6);
-      c.closePath(); c.fill();
-      c.restore();
-      // 头光（金色月牙）
-      c.save();
-      c.globalAlpha = 0.7;
-      c.fillStyle = '#fbe8b0';
-      c.beginPath();
-      c.arc(cx, topY+bh*0.32, bw*0.30, Math.PI*0.85, Math.PI*0.15, true);
-      c.fill();
-      c.restore();
-      // 帽子（官帽）
-      c.fillStyle = NAVY;
-      var hatW = bw*0.30;
-      c.beginPath();
-      c.moveTo(cx-hatW/2, topY+bh*0.18);
-      c.lineTo(cx+hatW/2, topY+bh*0.18);
-      c.lineTo(cx+hatW*0.42, topY+bh*0.07);
-      c.lineTo(cx-hatW*0.42, topY+bh*0.07);
-      c.closePath(); c.fill();
-      // 帽顶金珠
-      circle(cx, topY+bh*0.05, bw*0.04, GOLD, NAVY, 1.5);
-      // 帽翅
-      rect(cx-hatW*0.85, topY+bh*0.13, hatW*0.4, bh*0.04, NAVY);
-      rect(cx+hatW*0.45, topY+bh*0.13, hatW*0.4, bh*0.04, NAVY);
-      // 脸
-      c.fillStyle = '#f6d6a8';
-      c.beginPath();
-      c.ellipse(cx, topY+bh*0.30, bw*0.13, bh*0.115, 0, 0, Math.PI*2);
-      c.fill();
-      c.strokeStyle='#c89a64'; c.lineWidth=1; c.stroke();
-      // 眉
-      c.strokeStyle = '#222'; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(cx-bw*0.075, topY+bh*0.275); c.lineTo(cx-bw*0.025, topY+bh*0.275); c.stroke();
-      c.beginPath(); c.moveTo(cx+bw*0.025, topY+bh*0.275); c.lineTo(cx+bw*0.075, topY+bh*0.275); c.stroke();
-      // 眼
-      c.fillStyle = '#222';
-      c.fillRect(cx-bw*0.06, topY+bh*0.295, 4, 2);
-      c.fillRect(cx+bw*0.04, topY+bh*0.295, 4, 2);
-      // 胡须
-      c.fillStyle = '#1a1a1a';
-      c.beginPath();
-      c.moveTo(cx-bw*0.08, topY+bh*0.36);
-      c.quadraticCurveTo(cx, topY+bh*0.50, cx+bw*0.08, topY+bh*0.36);
-      c.lineTo(cx+bw*0.05, topY+bh*0.58);
-      c.lineTo(cx, topY+bh*0.50);
-      c.lineTo(cx-bw*0.05, topY+bh*0.58);
-      c.closePath(); c.fill();
-      // 长袍
-      c.fillStyle = robeColor;
-      c.beginPath();
-      c.moveTo(cx-bw*0.34, topY+bh*0.97);
-      c.lineTo(cx-bw*0.20, topY+bh*0.45);
-      c.lineTo(cx-bw*0.07, topY+bh*0.42);
-      c.lineTo(cx, topY+bh*0.52);
-      c.lineTo(cx+bw*0.07, topY+bh*0.42);
-      c.lineTo(cx+bw*0.20, topY+bh*0.45);
-      c.lineTo(cx+bw*0.34, topY+bh*0.97);
-      c.closePath();
-      c.fill();
-      c.strokeStyle = GOLD; c.lineWidth = 2; c.stroke();
-      // 玉带
-      rect(cx-bw*0.14, topY+bh*0.66, bw*0.28, bh*0.05, GOLD);
-      rect(cx-bw*0.04, topY+bh*0.665, bw*0.08, bh*0.04, '#fff', GOLD, 1);
-      // 双手抱物
-      c.fillStyle = '#f6d6a8';
-      circle(cx-bw*0.06, topY+bh*0.62, bw*0.04, '#f6d6a8','#c89a64',1);
-      circle(cx+bw*0.06, topY+bh*0.62, bw*0.04, '#f6d6a8','#c89a64',1);
-    }
-    // 时运简述（按吉凶等级生成）
-    function describeHour(luck, idx){
-      var jiPool = [
-        '诸事顺遂，利于求财、出行',
-        '贵人相助，利于事业、求名',
-        '财运亨通，宜把握机会',
-        '利于沟通，合作洽谈顺利',
-        '心想事成，诸事皆宜'
-      ];
-      var xiongPool = [
-        '诸事不利，注意健康安全',
-        '诸事不宜，谨防口舌是非',
-        '凶险较重，重要事项暂缓'
-      ];
-      var pingPool = [
-        '平平稳稳，宜静不宜动',
-        '平稳无事，宜处理琐事',
-        '宜守成，不宜妄动',
-        '宜休息养神，静心为宜'
-      ];
-      if(luck==='吉') return jiPool[idx % jiPool.length];
-      if(luck==='凶' || luck==='大凶') return xiongPool[idx % xiongPool.length];
-      return pingPool[idx % pingPool.length];
-    }
-    // 中文/英文混排折行
-    function wrapText(text, x, y, maxW, lineH, font, color, align){
-      c.font = font; c.fillStyle = color || DARK;
-      c.textAlign = align || 'left'; c.textBaseline='top';
-      var line = '', cy = y;
-      for(var i=0;i<text.length;i++){
-        var ch = text[i];
-        var test = line + ch;
-        if(c.measureText(test).width > maxW && line){
-          c.fillText(line, x, cy);
-          line = ch;
-          cy += lineH;
-        } else {
-          line = test;
-        }
-      }
-      if(line) c.fillText(line, x, cy);
-      return cy + lineH;
+    function gradient(x,y,w,h,c1,c2,vertical){
+      var grd = vertical ? c.createLinearGradient(x,y,x,y+h) : c.createLinearGradient(x,y,x+w,y);
+      grd.addColorStop(0, c1);
+      grd.addColorStop(1, c2);
+      return grd;
     }
 
-    // ── 解析数据 ──
+    // 解析数据
     var d = new Date(day.date+'T00:00:00');
-    var WD = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][d.getDay()===0?6:d.getDay()-1];
+    var WD_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
     var YR = d.getFullYear();
     var MO = (d.getMonth()+1)+'月';
     var DN = d.getDate();
-    var DPM = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
     var lunarStr = (day.lunar_ymd||'').replace(/^\d+年/,'');
-    var ZIRAN={'子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龙','巳':'蛇','午':'马','未':'羊','申':'猴','酉':'鸡','戌':'狗','亥':'猪'};
-    var yZhi=(day.year_gz||'').length>=2?day.year_gz[1]:'';
-    var shengxiao = ZIRAN[yZhi]||'';
-    var yi=day.yi||[], ji=day.ji||[];
     var dirs = day.dir || {};
+    var yi = day.yi || [];
+    var ji = day.ji || [];
+    var chong = day.chong_desc || '—';
 
-    // ── 1. 背景 ──
-    rect(0,0,W,H,BG);
-    // 背景纹理（极淡云纹横线）
-    c.save();
-    c.globalAlpha = 0.04;
-    c.strokeStyle = NAVY; c.lineWidth = 1;
-    for(var ty=0; ty<H; ty+=18){
-      c.beginPath(); c.moveTo(0,ty); c.lineTo(W,ty); c.stroke();
-    }
-    c.restore();
+    // ========== 1. 背景 ==========
+    var bgGrad = gradient(0,0,W,H,BG_LIGHT,BG_GRAY,true);
+    rect(0,0,W,H,bgGrad);
 
-    // ── 2. 顶部标题栏（深蓝 + 金边 + 角部装饰）──
-    var TB_H = 178;
-    rect(0,0,W,TB_H,NAVY);
-    hline(8, 0, W, GOLD, 2);
-    hline(TB_H-8, 0, W, GOLD, 2);
-    hline(TB_H, 0, W, GOLD, 4);
-    // 金色角部纹饰
-    function cornerOrn(x,y,sz,fx,fy){
+    // 外边框
+    c.strokeStyle = GOLD;
+    c.lineWidth = 4;
+    c.strokeRect(0,0,W,H);
+
+    // ========== 2. 顶部 Header ==========
+    var headerH = 110;
+    var headerGrad = gradient(0,0,W,headerH,NAVY_DARK,NAVY,false);
+    rect(0,0,W,headerH,headerGrad);
+
+    // 底部金边
+    c.strokeStyle = GOLD;
+    c.lineWidth = 4;
+    c.beginPath();
+    c.moveTo(0,headerH);
+    c.lineTo(W,headerH);
+    c.stroke();
+
+    // 装饰内边框
+    c.strokeStyle = 'rgba(212,175,55,0.4)';
+    c.lineWidth = 2;
+    c.strokeRect(8,8,W-16,headerH-16);
+
+    // 太极图（左右）- 使用简化绘制
+    function drawTaiji(cx,cy,r){
+      circle(cx,cy,r,'#f5e6b3');
       c.save();
-      c.translate(x,y); c.scale(fx?-1:1, fy?-1:1);
-      c.fillStyle = GOLD;
       c.beginPath();
-      c.moveTo(0,0);
-      c.lineTo(sz,0);
-      c.lineTo(sz*0.65, sz*0.18);
-      c.lineTo(sz*0.85, sz*0.40);
-      c.lineTo(sz*0.45, sz*0.50);
-      c.lineTo(sz*0.55, sz*0.80);
-      c.lineTo(sz*0.18, sz*0.65);
-      c.lineTo(0, sz);
-      c.closePath();
+      c.arc(cx,cy,r*0.62,-Math.PI/2,Math.PI/2);
+      c.fillStyle = NAVY;
       c.fill();
+      circle(cx,cy-r*0.31,r*0.31,'#f5e6b3');
+      circle(cx,cy+r*0.31,r*0.31,NAVY);
+      circle(cx,cy-r*0.31,r*0.09,NAVY);
+      circle(cx,cy+r*0.31,r*0.09,'#f5e6b3');
       c.restore();
     }
-    cornerOrn(6, 6, 56, false, false);
-    cornerOrn(W-6, 6, 56, true, false);
-    cornerOrn(6, TB_H-6, 56, false, true);
-    cornerOrn(W-6, TB_H-6, 56, true, true);
-
-    // 左右八卦图
-    bagua(120, TB_H/2, 56);
-    bagua(W-120, TB_H/2, 56);
+    drawTaiji(50,headerH/2,30);
+    drawTaiji(W-50,headerH/2,30);
 
     // 标题
-    txt('新西兰财神庙', W/2, TB_H/2-22, 'bold 70px "STKaiti","STSong","PingFang SC",serif', GOLD, 'center','middle');
-    // 副标题装饰短线
-    c.save();
-    c.strokeStyle = GOLD; c.lineWidth = 1.5;
-    c.beginPath(); c.moveTo(W/2-180, TB_H/2+30); c.lineTo(W/2-90, TB_H/2+30); c.stroke();
-    c.beginPath(); c.moveTo(W/2+90,  TB_H/2+30); c.lineTo(W/2+180, TB_H/2+30); c.stroke();
-    c.restore();
-    txt('三源道长监制', W/2, TB_H/2+44, '24px "STKaiti","PingFang SC",serif', '#e6c66a', 'center','top');
+    c.shadowColor = 'rgba(212,175,55,0.8)';
+    c.shadowBlur = 10;
+    txt('新西兰财神庙', W/2, headerH/2-10, 'bold 32px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+    c.shadowBlur = 0;
 
-    // 右上：日期 X/N
-    rect(W-110, 18, 78, 56, 'rgba(212,175,55,0.12)', GOLD, 2);
-    txt(DN+'/'+DPM, W-71, 38, 'bold 22px "Arial",sans-serif', GOLD, 'center','middle');
-    txt('日期', W-71, 60, 'bold 12px "STKaiti","PingFang SC",serif', GOLD, 'center','top');
-    // 左上：关闭
-    txt('✕', 38, 28, 'bold 22px "Arial",sans-serif', GOLD, 'center','top');
-    txt('关闭', 38, 56, 'bold 11px "STKaiti","PingFang SC",serif', GOLD, 'center','top');
+    // 副标题信息
+    txt(WD_EN, 100, headerH-25, '12px Arial', GOLD, 'left','middle');
+    txt(YR+' '+MO, W/2, headerH-25, '12px "STKaiti",serif', '#fff', 'center','middle');
+    var gzStr = (day.year_gz||'')+' '+(day.month_gz||'')+' '+(day.day_gz||'');
+    txt(gzStr, W-100, headerH-25, '12px "STKaiti",serif', GOLD, 'right','middle');
 
-    // ── 主体 ──
-    var BX = 30, BW = W-60;
-    var Y = TB_H+14;
+    var Y = headerH;
 
-    // ── 3. 日期行 ──
-    var R1H = 78;
-    rrect(BX, Y, BW, R1H, 6, '#fff', BLUE_L, 2);
-    txt(WD, BX+BW*0.13, Y+R1H/2, 'bold 30px "Arial",sans-serif', TXT_BLUE, 'center','middle');
-    var midX = BX+BW/2;
-    c.save(); c.strokeStyle = TXT_BLUE; c.lineWidth = 1.5;
-    c.beginPath(); c.moveTo(midX-130, Y+R1H/2); c.lineTo(midX-95, Y+R1H/2); c.stroke();
-    c.beginPath(); c.moveTo(midX+95,  Y+R1H/2); c.lineTo(midX+130, Y+R1H/2); c.stroke();
-    c.restore();
-    txt(YR+' '+MO, midX, Y+R1H/2, 'bold 38px "STKaiti","Arial",serif', DARK, 'center','middle');
-    var gzLabel = (day.year_gz||'')+shengxiao+'年 '+(day.month_gz||'')+'月 '+(day.day_gz||'')+'日';
-    txt(gzLabel, BX+BW*0.85, Y+R1H/2, 'bold 22px "STKaiti","PingFang SC",serif', TXT_BLUE, 'center','middle');
-    Y += R1H + 10;
+    // ========== 3. 主日期区（山水背景） ==========
+    var dateH = 150;
+    var dateGrad = gradient(0,Y,W,dateH,'#e8f4f8','#c8dce8',true);
+    rect(0,Y,W,dateH,dateGrad);
 
-    // ── 4. 大数字 + 农历 ──
-    var R2H = 320;
-    rrect(BX, Y, BW, R2H, 6, '#fff', BLUE_L, 2);
-    // 农历 badge
-    var lbx = BX+30, lby = Y+30;
-    rect(lbx, lby, 70, 38, NAVY);
-    txt('农历', lbx+35, lby+19, 'bold 20px "STKaiti","PingFang SC",serif', GOLD, 'center','middle');
-    txt(lunarStr, lbx+82, lby+19, 'bold 30px "STKaiti","PingFang SC",serif', DARK, 'left','middle');
-    // 水印
-    c.save();
-    c.globalAlpha = 0.06;
-    c.font = 'bold 200px "STKaiti","PingFang SC",serif';
-    c.fillStyle = NAVY;
-    c.textAlign='center'; c.textBaseline='middle';
-    c.fillText('财神', BX+BW*0.40, Y+R2H*0.55);
-    c.fillText('日历', BX+BW*0.60, Y+R2H*0.55);
-    c.restore();
-    // 大数字
-    txt(String(DN), BX+BW/2, Y+R2H*0.58, 'bold 240px "Georgia","Times New Roman",serif', NAVY, 'center','middle');
-    Y += R2H + 10;
-
-    // ── 5. 诸神方位 ──
-    var R3H = 310;
-    rrect(BX, Y, BW, R3H, 6, '#fff', BLUE_L, 2);
-    // 标题横幅
-    rect(BX+BW/2-110, Y+12, 220, 40, NAVY);
-    txt('诸神方位', BX+BW/2, Y+32, 'bold 26px "STKaiti","PingFang SC",serif', GOLD, 'center','middle');
-    // 4 神位
-    var godsTopY = Y+62;
-    var godsBoxH = R3H-62-12;
-    var gods = [
-      {name:'财神', dir: dirs.cai     || '西南', robe:'#c9a13b'},
-      {name:'喜神', dir: dirs.xi      || '西北', robe:'#c4322a'},
-      {name:'福神', dir: dirs.fu      || '东北', robe:'#3a6a8a'},
-      {name:'阳贵', dir: dirs.yanggui || '东南', robe:'#4a7a3a'}
-    ];
-    var gw = BW/4;
-    gods.forEach(function(g,i){
-      var gx = BX + i*gw + gw/2;
-      if(i>0){
-        c.save();
-        c.setLineDash([4,4]);
-        c.strokeStyle = '#c9d6e3'; c.lineWidth = 1;
-        c.beginPath(); c.moveTo(BX+i*gw, godsTopY+10); c.lineTo(BX+i*gw, godsTopY+godsBoxH-10); c.stroke();
-        c.restore();
-      }
-      // 神像（占上半）
-      var portW = gw*0.50, portH = godsBoxH*0.55;
-      deityPortrait(gx, godsTopY+4, portW, portH, g.robe);
-      // 神名
-      txt(g.name, gx, godsTopY+godsBoxH*0.60, 'bold 32px "STKaiti","PingFang SC",serif', DARK, 'center','top');
-      // 方位 红框
-      rect(gx-34, godsTopY+godsBoxH*0.78, 68, 30, '#fff', RED_C, 2);
-      txt(g.dir, gx, godsTopY+godsBoxH*0.78+15, 'bold 22px "STKaiti","PingFang SC",serif', RED_C, 'center','middle');
-      // 罗盘
-      smallCompass(gx, godsTopY+godsBoxH*0.96, 24, g.dir);
-    });
-    Y += R3H + 10;
-
-    // ── 6. 冲煞 ──
-    var R4H = 70;
-    rrect(BX, Y, BW, R4H, 6, '#fff', BLUE_L, 2);
-    // 冲煞 印章块
-    rect(BX+30, Y+R4H/2-22, 86, 44, RED_C, RED_D, 2);
-    txt('冲煞', BX+73, Y+R4H/2, 'bold 26px "STKaiti","PingFang SC",serif', '#fff', 'center','middle');
-    // 装饰云纹
-    txt('～', BX+150, Y+R4H/2+2, '24px "STKaiti","PingFang SC",serif', '#bcd3e3', 'left','middle');
-    txt('～', BX+BW-180, Y+R4H/2+2, '24px "STKaiti","PingFang SC",serif', '#bcd3e3', 'left','middle');
-    txt(day.chong_desc || '蛇日冲(己亥)猪 煞东', BX+BW/2+30, Y+R4H/2, 'bold 32px "STKaiti","PingFang SC",serif', RED_C, 'center','middle');
-    Y += R4H + 10;
-
-    // ── 7. 宜忌 ──
-    var R5H = 160;
-    rrect(BX, Y, BW, R5H, 6, '#fff', BLUE_L, 2);
-    // 中央分割
-    vline(BX+BW/2, Y+14, Y+R5H-14, '#e0e6ed', 1);
-    // 宜印章
-    var sealCY = Y+R5H/2;
-    var yiSealX = BX+90;
-    circle(yiSealX, sealCY, 48, RED_C, RED_D, 4);
-    circle(yiSealX, sealCY, 42, null, '#fff', 1.5);
-    txt('宜', yiSealX, sealCY, 'bold 52px "STKaiti","PingFang SC",serif', '#fff', 'center','middle');
-    // 忌印章
-    var jiSealX = BX+BW-90;
-    circle(jiSealX, sealCY, 48, '#1e3963', '#0f2440', 4);
-    circle(jiSealX, sealCY, 42, null, '#fff', 1.5);
-    txt('忌', jiSealX, sealCY, 'bold 52px "STKaiti","PingFang SC",serif', '#fff', 'center','middle');
-    // 宜内容
-    var yiAreaX = yiSealX + 60;
-    var yiAreaW = BW/2 - 60 - 30;
-    var yiText = (yi.length ? yi : ['—']).slice(0,12).join('  ');
-    wrapText(yiText, yiAreaX, Y+30, yiAreaW, 36, 'bold 26px "STKaiti","PingFang SC",serif', DARK, 'left');
-    // 忌内容
-    var jiAreaX = BX + BW/2 + 30;
-    var jiAreaW = BW/2 - 60 - 30;
-    var jiText = (ji.length ? ji : ['—']).slice(0,12).join('  ');
-    wrapText(jiText, jiAreaX, Y+30, jiAreaW, 36, 'bold 26px "STKaiti","PingFang SC",serif', DARK, 'left');
-    Y += R5H + 10;
-
-    // ── 8. 今日时运 表格 ──
-    var R6H = 670;
-    rrect(BX, Y, BW, R6H, 6, '#fff', BLUE_L, 2);
-    // 标题横幅
-    rect(BX+BW/2-110, Y+12, 220, 40, NAVY);
-    txt('今 日 时 运', BX+BW/2, Y+32, 'bold 26px "STKaiti","PingFang SC",serif', GOLD, 'center','middle');
-
-    // 表格区域
-    var tblY = Y+62, tblH = R6H-62-15;
-    var halfW = BW/2;
-    var hdrH = 44;
-    var col = [0.13, 0.10, 0.10, 0.67]; // 时辰、时支、吉凶、简述
-
-    function drawTblHeader(x){
-      rect(x, tblY, halfW, hdrH, NAVY);
-      var cx = x;
-      ['时辰','时支','吉凶','时运简述'].forEach(function(lb,k){
-        var cw = halfW*col[k];
-        txt(lb, cx+cw/2, tblY+hdrH/2, 'bold 22px "STKaiti","PingFang SC",serif', GOLD, 'center','middle');
-        if(k>0) vline(cx, tblY, tblY+hdrH, GOLD2, 1);
-        cx += cw;
-      });
-    }
-    drawTblHeader(BX);
-    drawTblHeader(BX+halfW);
-    // 中央分隔
-    vline(BX+halfW, tblY, tblY+hdrH+tblH, BLUE_L, 2);
-
-    // 时辰数据
-    var timeMap = [
-      '23:00-01:00','01:00-03:00','03:00-05:00','05:00-07:00',
-      '07:00-09:00','09:00-11:00','11:00-13:00','13:00-15:00',
-      '15:00-17:00','17:00-19:00','19:00-21:00','21:00-23:00'
-    ];
-    var zhi12=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-    var labels12 = ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'];
-    var hourByIdx = {};
-    (hours||[]).forEach(function(h){
-      var z = (h.gz||'')[1];
-      var idx = zhi12.indexOf(z);
-      if(idx>=0) hourByIdx[idx] = h;
-    });
-    var rows = [];
-    for(var i=0;i<12;i++){
-      var h = hourByIdx[i] || {};
-      var luck = h.luck || '平';
-      rows.push({
-        time: timeMap[i],
-        label: labels12[i],
-        zhi: zhi12[i] + '时',
-        luck: luck,
-        desc: describeHour(luck, i)
-      });
-    }
-
-    var rowH = (tblH - hdrH) / 6;
-    function drawRow(idx, x, y){
-      var r = rows[idx];
-      if(idx % 2 === 1){
-        rect(x+1, y, halfW-2, rowH, '#f5f8fb');
-      }
-      var cx = x;
-      // 时辰列：时间（小灰）+ 时辰名
-      var cw0 = halfW*col[0];
-      txt(r.time, cx+cw0/2, y+10, '13px "Arial",sans-serif', '#888', 'center','top');
-      txt(r.label, cx+cw0/2, y+rowH-10, 'bold 22px "STKaiti","PingFang SC",serif', DARK, 'center','bottom');
-      cx += cw0;
-      // 时支
-      var cw1 = halfW*col[1];
-      txt(r.zhi, cx+cw1/2, y+rowH/2, 'bold 22px "STKaiti","PingFang SC",serif', DARK, 'center','middle');
-      cx += cw1;
-      // 吉凶
-      var cw2 = halfW*col[2];
-      var lkCol = r.luck==='吉' ? GREEN_C : (r.luck==='大凶' ? '#7a1010' : (r.luck==='凶' ? RED_C : '#a07820'));
-      txt(r.luck, cx+cw2/2, y+rowH/2, 'bold 22px "STKaiti","PingFang SC",serif', lkCol, 'center','middle');
-      cx += cw2;
-      // 简述
-      var cw3 = halfW*col[3];
-      txt(r.desc, cx+cw3/2, y+rowH/2, '20px "STKaiti","PingFang SC",serif', INK, 'center','middle');
-      // 列分隔
-      var ccx = x;
-      [col[0],col[1],col[2]].forEach(function(p){
-        ccx += halfW*p;
-        vline(ccx, y, y+rowH, '#e3e9ef', 1);
-      });
-      // 行底部
-      hline(y+rowH, x, x+halfW, '#e3e9ef', 1);
-    }
-    for(var i=0;i<6;i++){
-      drawRow(i,   BX,         tblY+hdrH+i*rowH);
-      drawRow(i+6, BX+halfW,   tblY+hdrH+i*rowH);
-    }
-    Y += R6H + 10;
-
-    // ── 9. 页脚 ──
-    var R7H = H - Y - 10;
-    rrect(BX, Y, BW, R7H, 6, '#fff', BLUE_L, 2);
-
-    // 左：logo（简化庙形）
-    var logoX = BX+50, logoY = Y+R7H/2;
-    circle(logoX, logoY, 32, '#fbe8b0', GOLD, 3);
-    c.fillStyle = RED_C;
+    // 底部金边
+    c.strokeStyle = GOLD;
+    c.lineWidth = 3;
     c.beginPath();
-    c.moveTo(logoX-22, logoY-6);
-    c.lineTo(logoX+22, logoY-6);
-    c.lineTo(logoX, logoY-26);
-    c.closePath();
-    c.fill();
-    rect(logoX-18, logoY-6, 36, 22, RED_C);
-    rect(logoX-3, logoY+2, 6, 14, GOLD);
+    c.moveTo(0,Y+dateH);
+    c.lineTo(W,Y+dateH);
+    c.stroke();
 
-    // 庙名 + 标语
-    txt('新西兰财神庙', logoX+55, logoY-12, 'bold 26px "STKaiti","PingFang SC",serif', NAVY, 'left','middle');
-    txt('弘扬财神文化  造福华人社区', logoX+55, logoY+18, '16px "STKaiti","PingFang SC",serif', '#666', 'left','middle');
+    // 农历竖排（左侧）
+    var lunarX = 30;
+    rrect(lunarX-12, Y+20, 24, 110, 8, '#fff', GOLD, 2);
+    c.font = 'bold 16px "STKaiti","KaiTi",serif';
+    c.fillStyle = TEXT_DARK;
+    c.textAlign = 'center';
+    c.textBaseline = 'top';
+    var lunarChars = lunarStr.split('');
+    for(var i=0; i<lunarChars.length && i<6; i++){
+      c.fillText(lunarChars[i], lunarX, Y+30+i*18);
+    }
 
-    // 中：红色印章
-    var sealX = BX+BW*0.55, sealY = Y+R7H/2;
-    rect(sealX-32, sealY-32, 64, 64, RED_C, RED_D, 2);
+    // 大数字（中央）
+    txt(String(DN), W/2, Y+dateH/2, 'bold 100px "STKaiti","KaiTi",serif', TEXT_DARK, 'center','middle');
+
+    // 日期信息（右侧）
+    rrect(W-100, Y+dateH/2-20, 80, 40, 6, 'rgba(255,255,255,0.7)', 'rgba(212,175,55,0.3)', 1);
+    txt(day.date, W-60, Y+dateH/2, '13px Arial', TEXT_DARK, 'center','middle');
+
+    Y += dateH;
+
+    // ========== 4. 诸神方位 ==========
+    var godsH = 130;
+    rect(0,Y,W,godsH,BG_GRAY);
+
+    // 标题
+    rrect(W/2-70, Y+15, 140, 30, 15, gradient(0,0,140,30,NAVY,NAVY_DARK,false), GOLD, 2);
+    txt('诸神方位', W/2, Y+30, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+    // 四神卡片
+    var godCards = [
+      {icon:'财', name:'财神', dir:dirs.cai||'—'},
+      {icon:'喜', name:'喜神', dir:dirs.xi||'—'},
+      {icon:'福', name:'福神', dir:dirs.fu||'—'},
+      {icon:'贵', name:'阳贵', dir:dirs.yanggui||'—'}
+    ];
+    var cardW = 150, cardH = 70, cardGap = 15;
+    var cardsStartX = (W - (cardW*4 + cardGap*3))/2;
+    godCards.forEach(function(god, idx){
+      var cx = cardsStartX + idx*(cardW+cardGap);
+      var cy = Y+55;
+
+      // 卡片背景
+      rrect(cx, cy, cardW, cardH, 8, '#fff', GOLD, 2);
+      rrect(cx+4, cy+4, cardW-8, cardH-8, 6, null, 'rgba(212,175,55,0.3)', 1);
+
+      // 图标
+      var iconGrad = gradient(cx+cardW/2-21, cy+10, 42, 42, GOLD, GOLD_LIGHT, false);
+      circle(cx+cardW/2, cy+31, 21, iconGrad, '#fff', 3);
+      txt(god.icon, cx+cardW/2, cy+31, 'bold 18px "STKaiti","KaiTi",serif', TEXT_DARK, 'center','middle');
+
+      // 名称和方位
+      txt(god.name, cx+cardW/2, cy+56, 'bold 13px "STKaiti","KaiTi",serif', TEXT_DARK, 'center','top');
+      rrect(cx+cardW/2-25, cy+72, 50, 20, 10, gradient(0,0,50,20,'#fff5f5','#ffe5e5',true), RED, 2);
+      txt(god.dir, cx+cardW/2, cy+82, 'bold 13px "STKaiti","KaiTi",serif', RED, 'center','middle');
+    });
+
+    Y += godsH;
+
+    // ========== 5. 冲煞条 ==========
+    var chongH = 35;
+    var chongGrad = gradient(0,Y,W,chongH,NAVY,NAVY_DARK,false);
+    rect(0,Y,W,chongH,chongGrad);
+    c.strokeStyle = GOLD;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(0,Y);
+    c.lineTo(W,Y);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(0,Y+chongH);
+    c.lineTo(W,Y+chongH);
+    c.stroke();
+
+    txt('冲煞：', W/2-100, Y+chongH/2, 'bold 14px "STKaiti","KaiTi",serif', '#fff', 'left','middle');
+    txt(chong, W/2-40, Y+chongH/2, 'bold 14px "STKaiti","KaiTi",serif', GOLD, 'left','middle');
+
+    Y += chongH;
+
+    // ========== 6. 宜忌区域 ==========
+    var yijiH = 100;
+    rect(0,Y,W,yijiH,BG_LIGHT);
+
+    // 中间分隔线
+    c.strokeStyle = GOLD;
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(W/2,Y);
+    c.lineTo(W/2,Y+yijiH);
+    c.stroke();
+
+    // 宜（左侧）
+    circle(60, Y+25, 20, gradient(0,0,40,40,'#e63946','#c41e3a',true), '#fff', 3);
+    txt('宜', 60, Y+25, 'bold 18px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+    txt('今日宜', 90, Y+25, 'bold 16px "STKaiti","KaiTi",serif', TEXT_DARK, 'left','middle');
+
+    var yiText = yi.slice(0,12).join(' ');
+    c.font = '13px "STKaiti","KaiTi",serif';
+    c.fillStyle = '#333';
+    var yiLines = wrapText(yiText, W/2-120);
+    yiLines.forEach(function(line, i){
+      c.fillText(line, 60, Y+50+i*18);
+    });
+
+    // 忌（右侧）
+    circle(W/2+60, Y+25, 20, gradient(0,0,40,40,'#2c5f7f','#1a3a5f',true), '#fff', 3);
+    txt('忌', W/2+60, Y+25, 'bold 18px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+    txt('今日忌', W/2+90, Y+25, 'bold 16px "STKaiti","KaiTi",serif', TEXT_DARK, 'left','middle');
+
+    var jiText = ji.slice(0,12).join(' ');
+    var jiLines = wrapText(jiText, W/2-120);
+    jiLines.forEach(function(line, i){
+      c.fillText(line, W/2+60, Y+50+i*18);
+    });
+
+    Y += yijiH;
+    c.strokeStyle = GOLD;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(0,Y);
+    c.lineTo(W,Y);
+    c.stroke();
+
+    // ========== 7. 今日时运表 ==========
+    var hourSectionH = H - Y - 80; // 留80px给footer
+    rect(0,Y,W,hourSectionH,gradient(0,Y,W,hourSectionH,BG_GRAY,'#dee2e6',true));
+
+    // 标题
+    rrect(W/2-70, Y+15, 140, 30, 15, gradient(0,0,140,30,NAVY,NAVY_DARK,false), GOLD, 2);
+    txt('今日时运', W/2, Y+30, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+    // 两个表格
+    var tableY = Y+55;
+    var tableW = (W-40)/2 - 6;
+    var tableH = hourSectionH - 70;
+
+    function drawHourTable(x, y, w, h, hourData){
+      rrect(x, y, w, h, 6, '#fff', GOLD, 2);
+
+      // 表头
+      var headerGrad = gradient(x,y,w,25,NAVY,NAVY_DARK,false);
+      c.save();
+      c.beginPath();
+      c.moveTo(x+6,y); c.lineTo(x+w-6,y); c.quadraticCurveTo(x+w,y,x+w,y+6);
+      c.lineTo(x+w,y+25); c.lineTo(x,y+25); c.lineTo(x,y+6); c.quadraticCurveTo(x,y,x+6,y);
+      c.closePath();
+      c.fillStyle = headerGrad;
+      c.fill();
+      c.restore();
+
+      c.strokeStyle = GOLD;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(x,y+25);
+      c.lineTo(x+w,y+25);
+      c.stroke();
+
+      txt('时辰', x+w*0.25, y+12.5, 'bold 12px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      txt('吉凶', x+w*0.5, y+12.5, 'bold 12px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      txt('时运简述', x+w*0.75, y+12.5, 'bold 12px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+      // 行
+      var rowH = (h-25)/hourData.length;
+      hourData.forEach(function(hour, i){
+        var ry = y+25+i*rowH;
+        if(i%2===0){
+          rect(x,ry,w,rowH,'#fafbfc');
+        }
+
+        if(i>0){
+          c.strokeStyle = '#e9ecef';
+          c.lineWidth = 1;
+          c.beginPath();
+          c.moveTo(x,ry);
+          c.lineTo(x+w,ry);
+          c.stroke();
+        }
+
+        var timeRange = hour.time_range || hour.time || '';
+        var label = hour.label || '';
+        txt(timeRange, x+10, ry+rowH*0.25, '9px Arial', GRAY, 'left','middle');
+        txt(label, x+10, ry+rowH*0.65, 'bold 11px "STKaiti","KaiTi",serif', TEXT_DARK, 'left','middle');
+
+        var luck = hour.luck || '平';
+        var luckColor = luck==='吉'?GREEN:luck==='凶'||luck==='大凶'?RED:GRAY;
+        txt(luck, x+w*0.5, ry+rowH/2, 'bold 12px "STKaiti","KaiTi",serif', luckColor, 'center','middle');
+
+        var desc = (hour.yi && hour.yi.length>0) ? hour.yi.slice(0,2).join('、') : '—';
+        c.font = '9px "STKaiti","KaiTi",serif';
+        c.fillStyle = '#495057';
+        var descLines = wrapText(desc, w*0.35);
+        descLines.slice(0,2).forEach(function(line, li){
+          c.fillText(line, x+w*0.58, ry+rowH*0.3+li*10);
+        });
+      });
+    }
+
+    var leftHours = hours.slice(0,6);
+    var rightHours = hours.slice(6,12);
+    drawHourTable(20, tableY, tableW, tableH, leftHours);
+    drawHourTable(W/2+6, tableY, tableW, tableH, rightHours);
+
+    Y += hourSectionH;
+
+    // ========== 8. Footer ==========
+    var footerH = 80;
+    var footerGrad = gradient(0,Y,W,footerH,NAVY_DARK,NAVY,false);
+    rect(0,Y,W,footerH,footerGrad);
+
+    c.strokeStyle = GOLD;
+    c.lineWidth = 4;
+    c.beginPath();
+    c.moveTo(0,Y);
+    c.lineTo(W,Y);
+    c.stroke();
+
+    rrect(8,Y+8,W-16,footerH-16,4,null,'rgba(212,175,55,0.3)',2);
+
+    // Logo圆形（左侧）
+    circle(60, Y+footerH/2, 30, '#fff', GOLD, 3);
+
+    // 文字（中央）
+    txt('新西兰财神庙', W/2, Y+footerH/2-10, 'bold 20px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+    txt('弘扬财神文化 · 造福华人社区', W/2, Y+footerH/2+12, '11px "STKaiti","KaiTi",serif', '#e9ecef', 'center','middle');
+    txt('三源道长监制', W/2, Y+footerH/2+28, '11px "STKaiti","KaiTi",serif', '#e9ecef', 'center','middle');
+
+    // 印章（右下角）
+    rrect(W-70, Y+footerH-60, 50, 50, 4, gradient(0,0,50,50,'#e63946','#c41e3a',true), RED_DARK, 2);
     c.save();
-    c.fillStyle = '#fff';
-    c.font = 'bold 22px "STKaiti","PingFang SC",serif';
-    c.textAlign = 'center'; c.textBaseline='middle';
-    c.fillText('道', sealX-13, sealY-15);
-    c.fillText('教', sealX+13, sealY-15);
-    c.fillText('正', sealX-13, sealY+15);
-    c.fillText('源', sealX+13, sealY+15);
+    c.translate(W-45, Y+footerH-35);
+    c.rotate(-Math.PI/2);
+    txt('三源道长监制', 0, 0, 'bold 10px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
     c.restore();
 
-    // 右：座右铭
-    txt('正心  正念  正行    积德  积福  积财', BX+BW-30, Y+R7H/2-15, 'bold 18px "STKaiti","PingFang SC",serif', DARK, 'right','middle');
-    txt('以道传财    以德聚财    以善发财', BX+BW-30, Y+R7H/2+15, '16px "STKaiti","PingFang SC",serif', '#555', 'right','middle');
+    // 文字换行辅助函数
+    function wrapText(text, maxWidth){
+      var words = text.split(' ');
+      var lines = [];
+      var currentLine = '';
 
-    return cv.toDataURL('image/png');
+      for(var i=0; i<words.length; i++){
+        var testLine = currentLine + (currentLine?' ':'') + words[i];
+        var metrics = c.measureText(testLine);
+        if(metrics.width > maxWidth && currentLine){
+          lines.push(currentLine);
+          currentLine = words[i];
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if(currentLine) lines.push(currentLine);
+      return lines;
+    }
+
+    return cv;
   }
 
-  // ── 固定母版 + 动态填字方案（DEBUG + 细粒度 box）────────────────────────
+  // ── 三源道长版 PNG（图2 视觉母版：深蓝金边 + 山水 + 诸神方位 + 宜忌印 + 时运表）──
   function drawFromMasterTemplate(day, hours, personal){
-    return new Promise(function(resolve, reject){
-      var masterImg = new Image();
-      masterImg.crossOrigin = 'anonymous';
+    return new Promise(function(resolve){
+      // ============ 画布与颜色 ============
+      var W = 1080, H = 1560;
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var c = cv.getContext('2d');
+      c.imageSmoothingEnabled = true;
 
-      masterImg.onload = function(){
-        var W = 1040;  // 固定母版宽度
-        var H = 1512;  // 固定母版高度
-        var cv = document.createElement('canvas');
-        cv.width = W;
-        cv.height = H;
-        var c = cv.getContext('2d');
+      var NAVY_DARK = '#0b2444';
+      var NAVY      = '#143356';
+      var NAVY_LITE = '#3a5e8a';
+      var GOLD      = '#d4af37';
+      var GOLD_LITE = '#f0d57a';
+      var TEXT      = '#143356';
+      var DARK      = '#0c1c2c';
+      var RED       = '#bf1f2d';
+      var RED_DEEP  = '#7c1623';
 
-        // 1. 绘制母版底图
-        c.drawImage(masterImg, 0, 0, W, H);
+      // ============ 工具函数 ============
+      function rect(x,y,w,h,fill){ c.fillStyle=fill; c.fillRect(x,y,w,h); }
+      function strokeRect(x,y,w,h,col,lw){ c.strokeStyle=col; c.lineWidth=lw||1; c.strokeRect(x,y,w,h); }
+      function rrect(x,y,w,h,r,fill,stroke,lw){
+        var rr = Math.min(r, w/2, h/2);
+        c.beginPath();
+        c.moveTo(x+rr,y);
+        c.lineTo(x+w-rr,y); c.quadraticCurveTo(x+w,y,x+w,y+rr);
+        c.lineTo(x+w,y+h-rr); c.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+        c.lineTo(x+rr,y+h); c.quadraticCurveTo(x,y+h,x,y+h-rr);
+        c.lineTo(x,y+rr); c.quadraticCurveTo(x,y,x+rr,y);
+        c.closePath();
+        if(fill){ c.fillStyle=fill; c.fill(); }
+        if(stroke){ c.strokeStyle=stroke; c.lineWidth=lw||1.5; c.stroke(); }
+      }
+      function txt(s,x,y,font,fill,align,baseline){
+        c.font=font; c.fillStyle=fill||TEXT;
+        c.textAlign=align||'left'; c.textBaseline=baseline||'alphabetic';
+        c.fillText(s,x,y);
+      }
+      function circle(x,y,r,fill,stroke,lw){
+        c.beginPath(); c.arc(x,y,r,0,Math.PI*2);
+        if(fill){ c.fillStyle=fill; c.fill(); }
+        if(stroke){ c.strokeStyle=stroke; c.lineWidth=lw||1; c.stroke(); }
+      }
+      function vGrad(x,y,w,h,c1,c2){ var g=c.createLinearGradient(x,y,x,y+h); g.addColorStop(0,c1); g.addColorStop(1,c2); return g; }
 
-        // ── DEBUG 模式开关 ──
-        var DEBUG_BOX = false;  // 设为 true 显示所有 box 边框
-
-        // ── 颜色常量 ──
-        var DARK    = '#1e1000';
-        var BROWN2  = '#7a5230';
-        var GREEN_C = '#1e5c20';
-        var RED_C   = '#7a1010';
-        var NAVY    = '#1a2f4f';
-
-        // ══════════════════════════════════════════════
-        // ── 工具函数：严格按 box 绘制 ──
-        // ══════════════════════════════════════════════
-
-        // 在 box 内居中绘制单行文字
-        function drawCenteredTextInBox(text, box, font, color){
-          c.font = font;
-          c.fillStyle = color || DARK;
-          c.textAlign = 'center';
-          c.textBaseline = 'middle';
-          c.fillText(text, box.left + box.width/2, box.top + box.height/2);
+      // 太极 + 八卦短线（简化版）
+      function taiji(cx,cy,r){
+        // 八卦放射短线
+        c.save();
+        c.strokeStyle = '#a8842a';
+        c.lineWidth = 1.4;
+        for(var i=0;i<8;i++){
+          var a = (Math.PI*2*i)/8 - Math.PI/2;
+          c.beginPath();
+          c.moveTo(cx+Math.cos(a)*(r*1.05), cy+Math.sin(a)*(r*1.05));
+          c.lineTo(cx+Math.cos(a)*(r*1.22), cy+Math.sin(a)*(r*1.22));
+          c.stroke();
         }
+        c.restore();
+        // 太极
+        circle(cx,cy,r,'#f3deaa','#9b7a26',2);
+        c.save();
+        c.beginPath(); c.arc(cx,cy,r,-Math.PI/2,Math.PI/2); c.fillStyle=NAVY_DARK; c.fill();
+        circle(cx,cy-r/2,r/2,'#f3deaa');
+        circle(cx,cy+r/2,r/2,NAVY_DARK);
+        circle(cx,cy-r/2,r*0.13,NAVY_DARK);
+        circle(cx,cy+r/2,r*0.13,'#f3deaa');
+        c.restore();
+      }
 
-        // 在 box 内竖排文字（居中）
-        function drawVerticalTextInBox(text, box, fontSize, color, charGap){
-          var chars = text.split('');
-          var gap = charGap || 2;
-          var totalHeight = chars.length * fontSize + (chars.length-1) * gap;
-          var startY = box.top + (box.height - totalHeight) / 2;
-          var centerX = box.left + box.width / 2;
+      // 简化神像（朝服画像）
+      function deityPortrait(x, y, w, h, robe){
+        c.save();
+        c.globalAlpha = 0.55;
+        c.fillStyle = '#fbe6a8';
+        c.beginPath(); c.arc(x+w/2, y+h*0.30, w*0.36, 0, Math.PI*2); c.fill();
+        c.restore();
+        // 帽
+        c.fillStyle = NAVY_DARK;
+        c.beginPath();
+        c.moveTo(x+w*0.30, y+h*0.18);
+        c.lineTo(x+w*0.70, y+h*0.18);
+        c.lineTo(x+w*0.62, y+h*0.06);
+        c.lineTo(x+w*0.38, y+h*0.06);
+        c.closePath(); c.fill();
+        circle(x+w/2, y+h*0.05, w*0.04, GOLD, NAVY_DARK, 1);
+        c.fillRect(x+w*0.06, y+h*0.13, w*0.22, h*0.04);
+        c.fillRect(x+w*0.72, y+h*0.13, w*0.22, h*0.04);
+        // 脸
+        c.fillStyle = '#f3d5a6';
+        c.beginPath(); c.ellipse(x+w/2, y+h*0.30, w*0.15, h*0.13, 0, 0, Math.PI*2); c.fill();
+        c.strokeStyle = '#b88f5b'; c.lineWidth = 1; c.stroke();
+        // 眼
+        c.fillStyle = '#222';
+        c.fillRect(x+w*0.42, y+h*0.30, 4, 2);
+        c.fillRect(x+w*0.54, y+h*0.30, 4, 2);
+        // 胡须
+        c.fillStyle = '#1a1a1a';
+        c.beginPath();
+        c.moveTo(x+w*0.40, y+h*0.36);
+        c.quadraticCurveTo(x+w/2, y+h*0.55, x+w*0.60, y+h*0.36);
+        c.lineTo(x+w*0.55, y+h*0.66);
+        c.lineTo(x+w/2, y+h*0.55);
+        c.lineTo(x+w*0.45, y+h*0.66);
+        c.closePath(); c.fill();
+        // 长袍
+        c.fillStyle = robe;
+        c.beginPath();
+        c.moveTo(x+w*0.10, y+h*0.99);
+        c.lineTo(x+w*0.25, y+h*0.50);
+        c.lineTo(x+w*0.42, y+h*0.46);
+        c.lineTo(x+w/2,    y+h*0.56);
+        c.lineTo(x+w*0.58, y+h*0.46);
+        c.lineTo(x+w*0.75, y+h*0.50);
+        c.lineTo(x+w*0.90, y+h*0.99);
+        c.closePath(); c.fill();
+        c.strokeStyle = GOLD; c.lineWidth = 1.5; c.stroke();
+        // 玉带
+        c.fillStyle = GOLD;
+        c.fillRect(x+w*0.32, y+h*0.72, w*0.36, h*0.05);
+        c.fillStyle = '#fff';
+        c.fillRect(x+w*0.46, y+h*0.725, w*0.08, h*0.04);
+        c.strokeStyle = GOLD; c.lineWidth = 1; c.strokeRect(x+w*0.46, y+h*0.725, w*0.08, h*0.04);
+      }
 
-          c.font = fontSize + 'px "STKaiti","PingFang SC",serif';
-          c.fillStyle = color || DARK;
-          c.textAlign = 'center';
-          c.textBaseline = 'top';
-
-          for(var i=0; i<chars.length; i++){
-            c.fillText(chars[i], centerX, startY + i * (fontSize + gap));
-          }
-        }
-
-        // 在 box 内绘制多行文字（自动换行，居中）
-        function drawWrappedTextInBox(textArray, box, fontSize, color, lineGap){
-          var gap = lineGap || 4;
-          var totalHeight = textArray.length * fontSize + (textArray.length-1) * gap;
-          var startY = box.top + (box.height - totalHeight) / 2;
-          var centerX = box.left + box.width / 2;
-
-          c.font = fontSize + 'px "STKaiti","PingFang SC",serif';
-          c.fillStyle = color || DARK;
-          c.textAlign = 'center';
-          c.textBaseline = 'top';
-
-          for(var i=0; i<textArray.length; i++){
-            c.fillText(textArray[i], centerX, startY + i * (fontSize + gap));
-          }
-        }
-
-        // ══════════════════════════════════════════════
-        // ── 解析数据 ──
-        // ══════════════════════════════════════════════
-
-        var d = new Date(day.date+'T00:00:00');
-        var WD_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
-        var WD_ZH = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
-        var YR = d.getFullYear();
-        var MO = d.getMonth()+1;
-        var DN = d.getDate();
-
-        var lunarStr = day.lunar_ymd||'';
-        lunarStr = lunarStr.replace(/^[^月]+年/,'');
-        var lunarM='', lunarD='';
-        var lm = lunarStr.match(/^(.{1,4})[月](.+)$/);
-        if(lm){lunarM=lm[1]; lunarD=lm[2];}else{lunarD=lunarStr;}
-
-        var ygz=day.year_gz||'', mgz=day.month_gz||'', dgz=day.day_gz||'';
-        var ZIRAN={'子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龙','巳':'蛇','午':'马','未':'羊','申':'猴','酉':'鸡','戌':'狗','亥':'猪'};
-        var yZhi=(day.year_gz||'').length>=2?day.year_gz[1]:'';
-        var shengxiao = ZIRAN[yZhi]||'';
-
-        var yi  =(personal&&personal.personal_yi&&personal.personal_yi.length)?personal.personal_yi:(day.yi||[]);
-        var ji  =(personal&&personal.personal_ji&&personal.personal_ji.length)?personal.personal_ji:(day.ji||[]);
-        var chong=day.chong_desc||'—';
-
-        // ══════════════════════════════════════════════
-        // ── BOX 坐标定义（基于母版实际框线）──
-        // ══════════════════════════════════════════════
-
-        var boxes = {
-          // 顶部区域
-          weekday: {left: 35, top: 175, width: 180, height: 70},        // 星期框
-          lunar: {left: 75, top: 245, width: 80, height: 220},          // 农历框
-          bigDate: {left: 240, top: 245, width: 280, height: 220},      // 大日期框
-          yearInfo: {left: 580, top: 175, width: 130, height: 50},      // 年生肖+年干支
-          monthDay: {left: 720, top: 175, width: 130, height: 50},      // 月干支+日干支
-
-          // 诸神方位（4格）
-          caishen: {left: 75, top: 535, width: 110, height: 110},
-          xishen: {left: 260, top: 535, width: 110, height: 110},
-          fushen: {left: 545, top: 535, width: 110, height: 110},
-          yanggui: {left: 730, top: 535, width: 110, height: 110},
-
-          // 冲煞
-          chongsha: {left: 35, top: 725, width: 970, height: 50},
-
-          // 宜忌
-          yi: {left: 45, top: 850, width: 120, height: 240},
-          ji: {left: 490, top: 850, width: 120, height: 240},
-
-          // 今日时运表格（左右两半，各6列）
-          timeTableLeft: {left: 35, top: 990, width: 435, height: 170},
-          timeTableRight: {left: 470, top: 990, width: 435, height: 170}
+      // 八卦小图（圆 + 八向 + 高亮方位）
+      function bagua(cx, cy, size, hiDir){
+        var r = size/2;
+        circle(cx, cy, r, '#fffbef', NAVY, 1.2);
+        var dirAngle = {
+          '北':-Math.PI/2,'东北':-Math.PI/4,'东':0,'东南':Math.PI/4,
+          '南':Math.PI/2,'西南':Math.PI*3/4,'西':Math.PI,'西北':-Math.PI*3/4
         };
-
-        // ══════════════════════════════════════════════
-        // ── 绘制内容 ──
-        // ══════════════════════════════════════════════
-
-        // 1. 星期
-        drawWrappedTextInBox([WD_EN, WD_ZH], boxes.weekday, 18, DARK, 6);
-
-        // 2. 农历（竖排）
-        var lunarText = lunarM + lunarD;
-        drawVerticalTextInBox(lunarText, boxes.lunar, 20, DARK, 4);
-
-        // 3. 大日期
-        drawCenteredTextInBox(String(DN), boxes.bigDate, 'bold 120px Georgia,serif', DARK);
-        // 月份（在日期下方）
-        c.font = '28px Georgia,serif';
-        c.fillStyle = DARK;
-        c.textAlign = 'center';
-        c.textBaseline = 'top';
-        c.fillText(String(MO), boxes.bigDate.left + boxes.bigDate.width/2, boxes.bigDate.top + boxes.bigDate.height - 40);
-
-        // 4. 年生肖 + 年干支
-        drawWrappedTextInBox(['年生肖 '+shengxiao, '年干支 '+ygz], boxes.yearInfo, 14, DARK, 4);
-
-        // 5. 月干支 + 日干支
-        drawWrappedTextInBox(['月干支 '+mgz, '日干支 '+dgz], boxes.monthDay, 14, DARK, 4);
-
-        // 6. 诸神方位
-        var caiDir = (day.dir&&day.dir.cai)||'—';
-        var xiDir  = (day.dir&&day.dir.xi)||'—';
-        var fuDir  = (day.dir&&day.dir.fu)||'—';
-        var yangguiDir = (day.dir&&day.dir.yanggui)||'—';
-
-        drawCenteredTextInBox(caiDir, boxes.caishen, 'bold 24px "STKaiti","PingFang SC",serif', DARK);
-        drawCenteredTextInBox(xiDir, boxes.xishen, 'bold 24px "STKaiti","PingFang SC",serif', DARK);
-        drawCenteredTextInBox(fuDir, boxes.fushen, 'bold 24px "STKaiti","PingFang SC",serif', DARK);
-        drawCenteredTextInBox(yangguiDir, boxes.yanggui, 'bold 24px "STKaiti","PingFang SC",serif', DARK);
-
-        // 7. 冲煞
-        drawCenteredTextInBox(chong, boxes.chongsha, '16px "STKaiti","PingFang SC",serif', DARK);
-
-        // 8. 宜
-        var yiFlat=[];
-        yi.forEach(function(t){ yiFlat.push(t.replace(/[·・\s]/g,'').slice(0,4)); });
-        drawWrappedTextInBox(yiFlat.slice(0,10), boxes.yi, 16, DARK, 6);
-
-        // 9. 忌
-        var jiFlat=[];
-        ji.forEach(function(t){ jiFlat.push(t.replace(/[·・\s]/g,'').slice(0,4)); });
-        drawWrappedTextInBox(jiFlat.slice(0,10), boxes.ji, 16, DARK, 6);
-
-        // 10. 今日时运表格
-        var timeRanges = [
-          ['23:00','01:00'],['01:00','03:00'],['03:00','05:00'],['05:00','07:00'],
-          ['07:00','09:00'],['09:00','11:00'],['11:00','13:00'],['13:00','15:00'],
-          ['15:00','17:00'],['17:00','19:00'],['19:00','21:00'],['21:00','23:00']
-        ];
-
-        // 左半表格（前6个时辰）
-        var leftColWidth = boxes.timeTableLeft.width / 6;
-        for(var i=0; i<6; i++){
-          var h = hours[i];
-          if(!h) continue;
-          var colX = boxes.timeTableLeft.left + i * leftColWidth + leftColWidth/2;
-          var hLuck = (personal&&h.personal&&h.personal.luck)?h.personal.luck:h.luck;
-
-          // 时辰
-          c.font = '10px "STKaiti","PingFang SC",serif';
-          c.fillStyle = DARK;
-          c.textAlign = 'center';
-          c.textBaseline = 'top';
-          c.fillText(timeRanges[i][0], colX, boxes.timeTableLeft.top + 5);
-          c.fillText(timeRanges[i][1], colX, boxes.timeTableLeft.top + 18);
-
-          // 时支
-          c.font = 'bold 13px "STKaiti","PingFang SC",serif';
-          c.fillText(h.label||'', colX, boxes.timeTableLeft.top + 35);
-
-          // 吉凶
-          var luckColor = hLuck==='吉'?GREEN_C:hLuck==='凶'?RED_C:BROWN2;
-          c.font = 'bold 13px "STKaiti","PingFang SC",serif';
-          c.fillStyle = luckColor;
-          c.fillText(hLuck||'', colX, boxes.timeTableLeft.top + 55);
-
-          // 时运简述（竖排）
-          var yiIt=(personal&&h.personal&&h.personal.yi&&h.personal.yi.length)?h.personal.yi.slice(0,1):(h.yi||[]).slice(0,1);
-          var jiIt=(personal&&h.personal&&h.personal.ji&&h.personal.ji.length)?h.personal.ji.slice(0,1):(h.ji||[]).slice(0,1);
-
-          var descY = boxes.timeTableLeft.top + 75;
-          c.font = '11px "STKaiti","PingFang SC",serif';
-          if(yiIt.length>0){
-            var yiText = yiIt[0].replace(/[·・\s]/g,'').slice(0,3);
-            c.fillStyle = GREEN_C;
-            for(var j=0; j<yiText.length; j++){
-              c.fillText(yiText[j], colX, descY + j*13);
-            }
-            descY += yiText.length*13 + 5;
-          }
-          if(jiIt.length>0){
-            var jiText = jiIt[0].replace(/[·・\s]/g,'').slice(0,3);
-            c.fillStyle = RED_C;
-            for(var j=0; j<jiText.length; j++){
-              c.fillText(jiText[j], colX, descY + j*13);
-            }
-          }
+        var ang = dirAngle[hiDir];
+        if(ang!==undefined){
+          c.save();
+          c.beginPath();
+          c.moveTo(cx,cy);
+          c.arc(cx,cy,r*0.95, ang-Math.PI/8, ang+Math.PI/8);
+          c.closePath();
+          c.fillStyle = 'rgba(191,31,45,0.55)';
+          c.fill();
+          c.restore();
         }
-
-        // 右半表格（后6个时辰）
-        var rightColWidth = boxes.timeTableRight.width / 6;
-        for(var i=6; i<12; i++){
-          var h = hours[i];
-          if(!h) continue;
-          var colX = boxes.timeTableRight.left + (i-6) * rightColWidth + rightColWidth/2;
-          var hLuck = (personal&&h.personal&&h.personal.luck)?h.personal.luck:h.luck;
-
-          // 时辰
-          c.font = '10px "STKaiti","PingFang SC",serif';
-          c.fillStyle = DARK;
-          c.textAlign = 'center';
-          c.textBaseline = 'top';
-          c.fillText(timeRanges[i][0], colX, boxes.timeTableRight.top + 5);
-          c.fillText(timeRanges[i][1], colX, boxes.timeTableRight.top + 18);
-
-          // 时支
-          c.font = 'bold 13px "STKaiti","PingFang SC",serif';
-          c.fillText(h.label||'', colX, boxes.timeTableRight.top + 35);
-
-          // 吉凶
-          var luckColor = hLuck==='吉'?GREEN_C:hLuck==='凶'?RED_C:BROWN2;
-          c.font = 'bold 13px "STKaiti","PingFang SC",serif';
-          c.fillStyle = luckColor;
-          c.fillText(hLuck||'', colX, boxes.timeTableRight.top + 55);
-
-          // 时运简述（竖排）
-          var yiIt=(personal&&h.personal&&h.personal.yi&&h.personal.yi.length)?h.personal.yi.slice(0,1):(h.yi||[]).slice(0,1);
-          var jiIt=(personal&&h.personal&&h.personal.ji&&h.personal.ji.length)?h.personal.ji.slice(0,1):(h.ji||[]).slice(0,1);
-
-          var descY = boxes.timeTableRight.top + 75;
-          c.font = '11px "STKaiti","PingFang SC",serif';
-          if(yiIt.length>0){
-            var yiText = yiIt[0].replace(/[·・\s]/g,'').slice(0,3);
-            c.fillStyle = GREEN_C;
-            for(var j=0; j<yiText.length; j++){
-              c.fillText(yiText[j], colX, descY + j*13);
-            }
-            descY += yiText.length*13 + 5;
-          }
-          if(jiIt.length>0){
-            var jiText = jiIt[0].replace(/[·・\s]/g,'').slice(0,3);
-            c.fillStyle = RED_C;
-            for(var j=0; j<jiText.length; j++){
-              c.fillText(jiText[j], colX, descY + j*13);
-            }
-          }
+        circle(cx, cy, r*0.42, NAVY, GOLD, 1);
+        c.save();
+        c.strokeStyle = NAVY;
+        c.lineWidth = 1;
+        for(var i=0;i<8;i++){
+          var a = (Math.PI*2*i)/8 - Math.PI/2;
+          c.beginPath();
+          c.moveTo(cx+Math.cos(a)*r*0.42, cy+Math.sin(a)*r*0.42);
+          c.lineTo(cx+Math.cos(a)*r*0.95, cy+Math.sin(a)*r*0.95);
+          c.stroke();
         }
+        c.restore();
+        txt('北', cx, cy-r*0.86, 'bold 11px "STKaiti","KaiTi",serif', NAVY, 'center','top');
+        txt('南', cx, cy+r*0.86, 'bold 11px "STKaiti","KaiTi",serif', NAVY, 'center','bottom');
+        txt('西', cx-r*0.86, cy, 'bold 11px "STKaiti","KaiTi",serif', NAVY, 'left','middle');
+        txt('东', cx+r*0.86, cy, 'bold 11px "STKaiti","KaiTi",serif', NAVY, 'right','middle');
+      }
 
-        resolve(cv.toDataURL('image/png'));
-      };
+      // 时运简述（按吉凶生成）
+      function describeHour(luck, i){
+        var ji   = ['诸事顺遂，利于求财、出行','贵人相助，利于事业、求名','财运亨通，宜把握机会','利于沟通，合作洽谈顺利','心想事成，诸事皆宜'];
+        var ping = ['平平稳稳，宜静不宜动','平稳无事，宜处理琐事','宜守成，不宜妄动','宜休息养神，静心为宜'];
+        var xiong= ['诸事不利，注意健康安全','诸事不宜，谨防口舌是非','凶险较重，重要事项暂缓'];
+        if(luck && luck.indexOf('吉')>=0) return ji[i % ji.length];
+        if(luck && luck.indexOf('凶')>=0) return xiong[i % xiong.length];
+        return ping[i % ping.length];
+      }
 
-      masterImg.onerror = function(){
-        reject(new Error('母版图片加载失败'));
-      };
+      // 双时辰表
+      function drawHourTable(x, y, w, h, rows){
+        var headH = 38;
+        rrect(x, y, w, headH, 4, NAVY, GOLD, 1.2);
+        var col1 = w*0.30;
+        var col2 = w*0.14;
+        var col3 = w*0.13;
+        var col4 = w - col1 - col2 - col3;
+        txt('时辰',  x+col1/2,            y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+        txt('时支',  x+col1+col2/2,       y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+        txt('吉凶',  x+col1+col2+col3/2,  y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+        txt('时运简述', x+col1+col2+col3+col4/2, y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
 
-      // 加载母版图片
-      masterImg.src = 'images/固定母版.png';
+        var bodyY = y+headH;
+        var bodyH = h - headH;
+        rrect(x, bodyY, w, bodyH, 4, '#ffffff', NAVY, 1);
+        var n = rows.length || 6;
+        var rowH = bodyH / n;
+        rows.forEach(function(r, i){
+          var ry = bodyY + i*rowH;
+          if(i%2===1) rect(x+1, ry, w-2, rowH, '#f5f7fa');
+          if(i>0){
+            c.strokeStyle = 'rgba(20,51,86,0.25)'; c.lineWidth = 1;
+            c.beginPath(); c.moveTo(x+4, ry); c.lineTo(x+w-4, ry); c.stroke();
+          }
+          c.strokeStyle = 'rgba(20,51,86,0.25)'; c.lineWidth = 1;
+          c.beginPath(); c.moveTo(x+col1, ry); c.lineTo(x+col1, ry+rowH); c.stroke();
+          c.beginPath(); c.moveTo(x+col1+col2, ry); c.lineTo(x+col1+col2, ry+rowH); c.stroke();
+          c.beginPath(); c.moveTo(x+col1+col2+col3, ry); c.lineTo(x+col1+col2+col3, ry+rowH); c.stroke();
+
+          var rangeText = (r.range || r.time_range || '').replace(/-/, '-');
+          txt(rangeText, x+col1/2, ry+rowH/2+1, '15px "STKaiti","KaiTi",Arial', TEXT, 'center','middle');
+          var zhi = r.zhi || (r.label||'').replace('时','');
+          txt(zhi+'时', x+col1+col2/2, ry+rowH/2+1, 'bold 16px "STKaiti","KaiTi",serif', TEXT, 'center','middle');
+
+          var luck = r.luck || '平';
+          var luckColor = '#5a5a5a';
+          if(luck.indexOf('吉')>=0) luckColor = RED;
+          else if(luck.indexOf('凶')>=0) luckColor = NAVY;
+          var luckFont = (luck==='大凶' ? 'bold 14px ' : 'bold 18px ') + '"STKaiti","KaiTi",serif';
+          txt(luck, x+col1+col2+col3/2, ry+rowH/2+1, luckFont, luckColor, 'center','middle');
+
+          var desc = describeHour(luck, i);
+          var maxDescW = col4 - 16;
+          var fs = 15;
+          c.font = fs+'px "STKaiti","KaiTi","PingFang SC",serif';
+          while(c.measureText(desc).width > maxDescW && fs > 11){
+            fs--;
+            c.font = fs+'px "STKaiti","KaiTi","PingFang SC",serif';
+          }
+          c.fillStyle = '#333';
+          c.textAlign = 'left'; c.textBaseline='middle';
+          c.fillText(desc, x+col1+col2+col3+8, ry+rowH/2+1);
+        });
+      }
+
+      // ============ 解析数据 ============
+      var d = new Date(day.date+'T00:00:00');
+      var WD_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+      var YR = d.getFullYear();
+      var MO = (d.getMonth()+1)+'月';
+      var DN = d.getDate();
+      var DPM = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+
+      var ZIRAN = {'子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龙','巳':'蛇','午':'马','未':'羊','申':'猴','酉':'鸡','戌':'狗','亥':'猪'};
+      var yZhi = (day.year_gz||'').length>=2 ? day.year_gz[1] : '';
+      var sx = ZIRAN[yZhi]||'';
+      var ganzhiText = (day.year_gz||'') + (sx?(sx+'年'):'年') + ' ' + (day.month_gz||'') + '月 ' + (day.day_gz||'') + '日';
+
+      var lunarStr = (day.lunar_ymd||'').replace(/^[^年]+年/,'');
+
+      var dirs = day.dir || {};
+      var yiArr = day.yi || [];
+      var jiArr = day.ji || [];
+      var chong = day.chong_desc || '';
+      var sha   = day.sha || '';
+      var dayZhi = day.day_zhi || ((day.day_gz||'').length>=2 ? day.day_gz[1] : '');
+      var dayShx = ZIRAN[dayZhi]||'';
+      var chongLine = '';
+      if(chong){
+        if(chong.indexOf('日冲')<0 && dayShx) chongLine = dayShx + '日冲' + chong;
+        else chongLine = chong;
+      } else if(dayShx){
+        chongLine = dayShx + '日';
+      }
+      if(sha){
+        var shaText = sha.indexOf('煞')<0 ? ('煞'+sha) : sha;
+        chongLine += '   ' + shaText;
+      }
+
+      // ============ 1. 整体背景 ============
+      rect(0,0,W,H,'#f1ece1');
+      strokeRect(8,8,W-16,H-16,GOLD,3);
+      strokeRect(16,16,W-32,H-32,'rgba(212,175,55,0.55)',1);
+
+      // ============ 2. 顶部牌头 ============
+      var hdrY = 22, hdrH = 156;
+      rrect(22, hdrY, W-44, hdrH, 6, vGrad(0,hdrY,W,hdrH,NAVY_DARK,NAVY), GOLD, 2.5);
+      // 横向极淡纹路
+      c.save();
+      c.globalAlpha = 0.08;
+      c.strokeStyle = GOLD; c.lineWidth = 1;
+      for(var ty=hdrY+8; ty<hdrY+hdrH; ty+=6){
+        c.beginPath(); c.moveTo(28,ty); c.lineTo(W-28,ty); c.stroke();
+      }
+      c.restore();
+      strokeRect(34, hdrY+12, W-68, hdrH-24, 'rgba(212,175,55,0.7)', 1.2);
+
+      // 太极
+      taiji(120, hdrY+hdrH/2, 38);
+      taiji(W-120, hdrY+hdrH/2, 38);
+
+      // 标题
+      c.save();
+      c.shadowColor = 'rgba(255,210,120,0.55)';
+      c.shadowBlur = 14;
+      txt('新西兰财神庙', W/2, hdrY+hdrH/2-8, 'bold 70px "STKaiti","KaiTi","STSong","PingFang SC",serif', GOLD, 'center','middle');
+      c.restore();
+      c.strokeStyle = GOLD; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(W/2-220, hdrY+hdrH/2+34); c.lineTo(W/2-130, hdrY+hdrH/2+34); c.stroke();
+      c.beginPath(); c.moveTo(W/2+130, hdrY+hdrH/2+34); c.lineTo(W/2+220, hdrY+hdrH/2+34); c.stroke();
+      txt('三源道长监制', W/2, hdrY+hdrH/2+54, '20px "STKaiti","KaiTi",serif', '#e9c977', 'center','middle');
+
+      // 左上 X 关闭
+      circle(58, hdrY+34, 17, 'rgba(255,255,255,0.05)', GOLD, 1.5);
+      c.strokeStyle = GOLD; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(50, hdrY+26); c.lineTo(66, hdrY+42); c.stroke();
+      c.beginPath(); c.moveTo(66, hdrY+26); c.lineTo(50, hdrY+42); c.stroke();
+      txt('关闭', 58, hdrY+58, 'bold 13px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+      // 右上 日期 X/N
+      var bdgX = W-100, bdgY = hdrY+18, bdgW = 70, bdgH = 50;
+      rrect(bdgX, bdgY, bdgW, bdgH, 6, 'rgba(212,175,55,0.12)', GOLD, 1.5);
+      txt(DN+'/'+DPM, bdgX+bdgW/2, bdgY+bdgH/2-2, 'bold 22px Arial', GOLD, 'center','middle');
+      txt('日期', bdgX+bdgW/2, bdgY+bdgH+13, 'bold 13px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+      var Y = hdrY + hdrH + 6;
+
+      // ============ 3. 主日期区 ============
+      var dateH = 380;
+      rrect(22, Y, W-44, dateH, 4, vGrad(22,Y,W-44,dateH,'#eaf3f8','#cdddea'), NAVY_LITE, 1);
+
+      // 山峦剪影
+      c.save();
+      c.globalAlpha = 0.18;
+      c.fillStyle = '#5b7a98';
+      c.beginPath();
+      c.moveTo(22, Y+dateH);
+      c.lineTo(22, Y+dateH-90);
+      c.lineTo(120, Y+dateH-160);
+      c.lineTo(220, Y+dateH-110);
+      c.lineTo(310, Y+dateH-180);
+      c.lineTo(420, Y+dateH-90);
+      c.lineTo(420, Y+dateH);
+      c.closePath(); c.fill();
+      c.beginPath();
+      c.moveTo(W-22, Y+dateH);
+      c.lineTo(W-22, Y+dateH-110);
+      c.lineTo(W-130, Y+dateH-200);
+      c.lineTo(W-220, Y+dateH-130);
+      c.lineTo(W-330, Y+dateH-220);
+      c.lineTo(W-440, Y+dateH-130);
+      c.lineTo(W-540, Y+dateH-90);
+      c.lineTo(W-540, Y+dateH);
+      c.closePath(); c.fill();
+      c.restore();
+
+      // 右下塔
+      c.save();
+      c.globalAlpha = 0.22;
+      c.fillStyle = '#7d96b3'; c.strokeStyle = NAVY; c.lineWidth = 1.5;
+      var ppx = W-160, ppy = Y+dateH-130;
+      c.beginPath(); c.rect(ppx-30, ppy, 60, 90); c.fill(); c.stroke();
+      c.beginPath();
+      c.moveTo(ppx-50, ppy);
+      c.lineTo(ppx+50, ppy);
+      c.lineTo(ppx+30, ppy-25);
+      c.lineTo(ppx-30, ppy-25);
+      c.closePath(); c.fill(); c.stroke();
+      c.beginPath();
+      c.moveTo(ppx-35, ppy-25);
+      c.lineTo(ppx+35, ppy-25);
+      c.lineTo(ppx, ppy-50);
+      c.closePath(); c.fill(); c.stroke();
+      c.restore();
+
+      // 中间淡背景大字"财 神 日 历"
+      c.save();
+      c.globalAlpha = 0.10;
+      c.font = 'bold 220px "STKaiti","KaiTi","STSong",serif';
+      c.fillStyle = NAVY;
+      c.textAlign = 'center'; c.textBaseline='middle';
+      c.fillText('财', W/2-340, Y+dateH/2);
+      c.fillText('神', W/2-115, Y+dateH/2);
+      c.fillText('日', W/2+115, Y+dateH/2);
+      c.fillText('历', W/2+340, Y+dateH/2);
+      c.restore();
+
+      // 顶部三栏
+      var topRow = Y+50;
+      txt(WD_EN, 80, topRow, 'bold 30px "Times New Roman","STSong",serif', TEXT, 'left','middle');
+      txt(YR+' '+MO, W/2, topRow, 'bold 36px "STKaiti","STSong","PingFang SC",serif', TEXT, 'center','middle');
+      c.strokeStyle = NAVY_LITE; c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(W/2-150, topRow); c.lineTo(W/2-100, topRow); c.stroke();
+      c.beginPath(); c.moveTo(W/2+100, topRow); c.lineTo(W/2+150, topRow); c.stroke();
+      txt(ganzhiText, W-80, topRow, 'bold 24px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'right','middle');
+
+      // 农历竖牌 + 文字
+      var ln_x = 96, ln_y = Y+120;
+      rrect(ln_x-22, ln_y, 44, 76, 6, NAVY, GOLD, 1.5);
+      txt('农', ln_x, ln_y+20, 'bold 22px "STKaiti","KaiTi",serif', GOLD_LITE, 'center','middle');
+      txt('历', ln_x, ln_y+50, 'bold 22px "STKaiti","KaiTi",serif', GOLD_LITE, 'center','middle');
+      txt(lunarStr, ln_x+30, ln_y+38, 'bold 28px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'left','middle');
+
+      // 大数字
+      c.save();
+      c.fillStyle = TEXT;
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = 'bold 320px "STKaiti","STSong","PingFang SC",serif';
+      c.fillText(String(DN), W/2, Y+dateH/2+30);
+      c.restore();
+
+      Y += dateH + 14;
+
+      // ============ 4. 诸神方位 ============
+      var godH = 264;
+      rrect(22, Y, W-44, godH, 4, '#fbf6e9', NAVY, 1.5);
+      var titW = 200, titH = 42;
+      var tx0 = W/2 - titW/2, ty0 = Y - titH/2;
+      rrect(tx0, ty0, titW, titH, 8, NAVY, GOLD, 2);
+      txt('诸神方位', W/2, ty0+titH/2+1, 'bold 24px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+      var gods = [
+        {name:'财神',  dir:dirs.cai     || '—', color:'#c9a23a'},
+        {name:'喜神',  dir:dirs.xi      || '—', color:'#d05148'},
+        {name:'福神',  dir:dirs.fu      || '—', color:'#caa455'},
+        {name:'阳贵',  dir:dirs.yanggui || '—', color:'#3a6390'}
+      ];
+      var colW = (W-44)/4;
+      var contentTop = Y + 36;
+      var contentH   = godH - 50;
+
+      gods.forEach(function(g, i){
+        var cx = 22 + colW*i + colW/2;
+        if(i>0){
+          c.strokeStyle = 'rgba(20,51,86,0.35)';
+          c.lineWidth = 1;
+          c.setLineDash([4,4]);
+          c.beginPath();
+          c.moveTo(22+colW*i, contentTop);
+          c.lineTo(22+colW*i, contentTop+contentH-10);
+          c.stroke();
+          c.setLineDash([]);
+        }
+        txt(g.name, cx, contentTop+8, 'bold 30px "STKaiti","KaiTi",serif', RED_DEEP, 'center','top');
+        var dW = 96, dH = 40;
+        rrect(cx-dW/2, contentTop+52, dW, dH, 6, '#fff7f1', RED, 2);
+        txt(g.dir, cx, contentTop+52+dH/2+1, 'bold 22px "STKaiti","KaiTi",serif', RED_DEEP, 'center','middle');
+        var py0 = contentTop+108;
+        var portraitH = 110;
+        deityPortrait(cx-95, py0, 100, portraitH, g.color);
+        bagua(cx+58, py0+portraitH/2, 70, g.dir);
+      });
+
+      Y += godH + 14;
+
+      // ============ 5. 冲煞条 ============
+      var chongH = 60;
+      rrect(22, Y, 130, chongH, 4, NAVY, GOLD, 1.5);
+      txt('冲煞', 22+65, Y+chongH/2+1, 'bold 28px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      rrect(160, Y, W-22-160, chongH, 4, '#fbf6e9', NAVY, 1);
+
+      var chongDisplay = chongLine || '—';
+      var sIdx = chongDisplay.indexOf('煞');
+      if(sIdx>=0){
+        var firstPart = chongDisplay.substr(0, sIdx).replace(/\s+$/,'');
+        var lastPart  = chongDisplay.substr(sIdx);
+        c.font = 'bold 26px "STKaiti","KaiTi","PingFang SC",serif';
+        c.textAlign = 'left'; c.textBaseline='middle';
+        var w1 = c.measureText(firstPart).width;
+        var w2 = c.measureText(lastPart).width;
+        var gap = 24;
+        var total = w1 + gap + w2;
+        var startX = 160 + (W-22-160)/2 - total/2;
+        c.fillStyle = TEXT; c.fillText(firstPart, startX, Y+chongH/2+1);
+        c.fillStyle = RED;  c.fillText(lastPart, startX+w1+gap, Y+chongH/2+1);
+      } else {
+        txt(chongDisplay, 160 + (W-22-160)/2, Y+chongH/2+1, 'bold 26px "STKaiti","KaiTi",serif', TEXT, 'center','middle');
+      }
+
+      Y += chongH + 14;
+
+      // ============ 6. 宜 / 忌 ============
+      var yjH = 180;
+      rrect(22, Y, W-44, yjH, 4, '#fdf7e3', NAVY, 1.5);
+      c.save();
+      c.strokeStyle = NAVY_LITE; c.lineWidth = 1.5; c.setLineDash([6,6]);
+      c.beginPath(); c.moveTo(W/2, Y+10); c.lineTo(W/2, Y+yjH-10); c.stroke();
+      c.setLineDash([]);
+      c.restore();
+
+      var stampR = 50;
+      var stampY = Y+yjH/2;
+      var rg1 = c.createRadialGradient(80,stampY-6,4, 80,stampY,stampR);
+      rg1.addColorStop(0,'#e34648'); rg1.addColorStop(1,'#9c1726');
+      circle(80, stampY, stampR, rg1, '#6b0d18', 3);
+      circle(80, stampY, stampR-7, null, 'rgba(255,255,255,0.6)', 1.5);
+      txt('宜', 80, stampY+2, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+
+      var rg2 = c.createLinearGradient(W-80-stampR, stampY-stampR, W-80+stampR, stampY+stampR);
+      rg2.addColorStop(0, NAVY); rg2.addColorStop(1, NAVY_DARK);
+      circle(W-80, stampY, stampR, rg2, '#06182f', 3);
+      circle(W-80, stampY, stampR-7, null, 'rgba(255,255,255,0.55)', 1.5);
+      txt('忌', W-80, stampY+2, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+
+      function drawList(items, x0, x1, top, color){
+        if(!items || !items.length){
+          txt('—', (x0+x1)/2, top+24, '24px "STKaiti","KaiTi",serif', '#666', 'center','top');
+          return;
+        }
+        var maxW = x1 - x0;
+        var perRow = items.length>15 ? 6 : 5;
+        var rowGap = 44;
+        var used = items.slice(0, 18);
+        var fontSize = 22;
+        c.font = 'bold '+fontSize+'px "STKaiti","KaiTi","PingFang SC",serif';
+        var perColW = maxW/perRow;
+        for(var i=0;i<used.length;i++){
+          var rr = Math.floor(i/perRow);
+          var cc = i % perRow;
+          var cx0 = x0 + perColW*cc + perColW/2;
+          var cy0 = top + 6 + rr*rowGap;
+          c.fillStyle = color;
+          c.textAlign='center'; c.textBaseline='top';
+          c.fillText(used[i], cx0, cy0);
+        }
+      }
+      drawList(yiArr, 150, W/2-30, Y+30, DARK);
+      drawList(jiArr, W/2+30, W-150, Y+30, DARK);
+
+      Y += yjH + 14;
+
+      // ============ 7. 今日时运 ============
+      var hrH = H - Y - 80 - 22;
+      rrect(22, Y, W-44, hrH, 4, '#f5efde', NAVY, 1.5);
+      var hrTitW = 220;
+      rrect(W/2-hrTitW/2, Y-22, hrTitW, 44, 8, NAVY, GOLD, 2);
+      txt('今日时运', W/2, Y, 'bold 26px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+      var pad = 30;
+      var tableY = Y + 36;
+      var tableH = hrH - 50;
+      var halfW = (W-44 - pad*3)/2;
+      drawHourTable(22+pad, tableY, halfW, tableH, hours.slice(0,6));
+      drawHourTable(22+pad+halfW+pad, tableY, halfW, tableH, hours.slice(6,12));
+
+      Y += hrH + 4;
+
+      // ============ 8. 页脚 ============
+      var ftY = H - 80 - 22;
+      var ftH = 80;
+      rrect(22, ftY, W-44, ftH, 4, '#f1ece1', NAVY_LITE, 1);
+
+      circle(70, ftY+ftH/2, 28, '#fff', GOLD, 2);
+      txt('财', 70, ftY+ftH/2+1, 'bold 26px "STKaiti","KaiTi",serif', RED_DEEP, 'center','middle');
+      txt('新西兰财神庙', 110, ftY+ftH/2-12, 'bold 22px "STKaiti","KaiTi",serif', NAVY, 'left','middle');
+      txt('弘扬财神文化  造福华人社区', 110, ftY+ftH/2+14, '13px "STKaiti","KaiTi",serif', '#777', 'left','middle');
+
+      var sx0 = W*0.50, sy0 = ftY+ftH/2;
+      rrect(sx0-30, sy0-30, 60, 60, 4, '#c41e3a', '#6b0d18', 2);
+      c.fillStyle = '#fff';
+      c.font = 'bold 18px "STKaiti","KaiTi",serif';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText('道', sx0-13, sy0-13);
+      c.fillText('教', sx0+13, sy0-13);
+      c.fillText('正', sx0-13, sy0+13);
+      c.fillText('源', sx0+13, sy0+13);
+
+      txt('正心 正念 正行   积德 积福 积财', W-50, ftY+ftH/2-12, 'bold 16px "STKaiti","KaiTi",serif', DARK, 'right','middle');
+      txt('以道传财    以德聚财    以善发财', W-50, ftY+ftH/2+14, '14px "STKaiti","KaiTi",serif', '#555', 'right','middle');
+
+      // ============ 输出 ============
+      resolve(cv.toDataURL('image/png'));
     });
   }
 

@@ -3195,12 +3195,12 @@
       c.beginPath(); c.moveTo(W/2+100, topRow); c.lineTo(W/2+150, topRow); c.stroke();
       txt(ganzhiText, W-80, topRow, 'bold 24px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'right','middle');
 
-      // 农历竖牌 + 文字 - 移到Thursday下方，左对齐
-      var ln_x = 96, ln_y = hdrY + hdrH + 20;
-      rrect(ln_x-22, ln_y, 44, 76, 6, NAVY, GOLD, 1.5);
-      txt('农', ln_x, ln_y+20, 'bold 22px "STKaiti","KaiTi",serif', GOLD_LITE, 'center','middle');
-      txt('历', ln_x, ln_y+50, 'bold 22px "STKaiti","KaiTi",serif', GOLD_LITE, 'center','middle');
-      txt(lunarStr, ln_x+30, ln_y+38, 'bold 28px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'left','middle');
+      // 农历信息 - 放在Thursday下方，保持清晰间距
+      var ln_x = 80, ln_y = topRow + 45;  // topRow是Thursday的Y坐标，+45确保明显间距
+      // 保留蓝色竖牌作为装饰（不显示"农历"文字）
+      rrect(ln_x-22, ln_y-10, 44, 56, 6, NAVY, GOLD, 1.5);
+      // 农历日期横排显示，放在Thursday下方
+      txt(lunarStr, ln_x+30, ln_y+18, 'bold 26px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'left','middle');
 
       // 大数字
       c.save();

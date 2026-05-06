@@ -3120,18 +3120,9 @@
       c.beginPath(); c.moveTo(W/2+130, hdrY+hdrH/2+34); c.lineTo(W/2+220, hdrY+hdrH/2+34); c.stroke();
       txt('三源道长监制', W/2, hdrY+hdrH/2+54, '20px "STKaiti","KaiTi",serif', '#e9c977', 'center','middle');
 
-      // 左上 X 关闭
-      circle(58, hdrY+34, 17, 'rgba(255,255,255,0.05)', GOLD, 1.5);
-      c.strokeStyle = GOLD; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(50, hdrY+26); c.lineTo(66, hdrY+42); c.stroke();
-      c.beginPath(); c.moveTo(66, hdrY+26); c.lineTo(50, hdrY+42); c.stroke();
-      txt('关闭', 58, hdrY+58, 'bold 13px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      // 左上角区域 - 已删除关闭按钮，保持深蓝背景
 
-      // 右上 日期 X/N
-      var bdgX = W-100, bdgY = hdrY+18, bdgW = 70, bdgH = 50;
-      rrect(bdgX, bdgY, bdgW, bdgH, 6, 'rgba(212,175,55,0.12)', GOLD, 1.5);
-      txt(DN+'/'+DPM, bdgX+bdgW/2, bdgY+bdgH/2-2, 'bold 22px Arial', GOLD, 'center','middle');
-      txt('日期', bdgX+bdgW/2, bdgY+bdgH+13, 'bold 13px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      // 右上角区域 - 已删除日期显示，保持深蓝背景
 
       var Y = hdrY + hdrH + 6;
 
@@ -3164,35 +3155,35 @@
       c.closePath(); c.fill();
       c.restore();
 
-      // 右下塔
-      c.save();
-      c.globalAlpha = 0.22;
-      c.fillStyle = '#7d96b3'; c.strokeStyle = NAVY; c.lineWidth = 1.5;
-      var ppx = W-160, ppy = Y+dateH-130;
-      c.beginPath(); c.rect(ppx-30, ppy, 60, 90); c.fill(); c.stroke();
-      c.beginPath();
-      c.moveTo(ppx-50, ppy);
-      c.lineTo(ppx+50, ppy);
-      c.lineTo(ppx+30, ppy-25);
-      c.lineTo(ppx-30, ppy-25);
-      c.closePath(); c.fill(); c.stroke();
-      c.beginPath();
-      c.moveTo(ppx-35, ppy-25);
-      c.lineTo(ppx+35, ppy-25);
-      c.lineTo(ppx, ppy-50);
-      c.closePath(); c.fill(); c.stroke();
-      c.restore();
+      // 右下塔 - 已删除，保持山水背景
+      // c.save();
+      // c.globalAlpha = 0.22;
+      // c.fillStyle = '#7d96b3'; c.strokeStyle = NAVY; c.lineWidth = 1.5;
+      // var ppx = W-160, ppy = Y+dateH-130;
+      // c.beginPath(); c.rect(ppx-30, ppy, 60, 90); c.fill(); c.stroke();
+      // c.beginPath();
+      // c.moveTo(ppx-50, ppy);
+      // c.lineTo(ppx+50, ppy);
+      // c.lineTo(ppx+30, ppy-25);
+      // c.lineTo(ppx-30, ppy-25);
+      // c.closePath(); c.fill(); c.stroke();
+      // c.beginPath();
+      // c.moveTo(ppx-35, ppy-25);
+      // c.lineTo(ppx+35, ppy-25);
+      // c.lineTo(ppx, ppy-50);
+      // c.closePath(); c.fill(); c.stroke();
+      // c.restore();
 
-      // 中间淡背景大字"财 神 日 历"
+      // 中间淡背景大字"财神""日历" - 调整字距和位置
       c.save();
       c.globalAlpha = 0.10;
       c.font = 'bold 220px "STKaiti","KaiTi","STSong",serif';
       c.fillStyle = NAVY;
       c.textAlign = 'center'; c.textBaseline='middle';
-      c.fillText('财', W/2-340, Y+dateH/2);
-      c.fillText('神', W/2-115, Y+dateH/2);
-      c.fillText('日', W/2+115, Y+dateH/2);
-      c.fillText('历', W/2+340, Y+dateH/2);
+      c.fillText('财', W/2-360, Y+dateH/2-10);
+      c.fillText('神', W/2-120, Y+dateH/2-10);
+      c.fillText('日', W/2+130, Y+dateH/2+10);
+      c.fillText('历', W/2+360, Y+dateH/2+10);
       c.restore();
 
       // 顶部三栏
@@ -3204,8 +3195,8 @@
       c.beginPath(); c.moveTo(W/2+100, topRow); c.lineTo(W/2+150, topRow); c.stroke();
       txt(ganzhiText, W-80, topRow, 'bold 24px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'right','middle');
 
-      // 农历竖牌 + 文字
-      var ln_x = 96, ln_y = Y+120;
+      // 农历竖牌 + 文字 - 移到Thursday下方，左对齐
+      var ln_x = 96, ln_y = hdrY + hdrH + 20;
       rrect(ln_x-22, ln_y, 44, 76, 6, NAVY, GOLD, 1.5);
       txt('农', ln_x, ln_y+20, 'bold 22px "STKaiti","KaiTi",serif', GOLD_LITE, 'center','middle');
       txt('历', ln_x, ln_y+50, 'bold 22px "STKaiti","KaiTi",serif', GOLD_LITE, 'center','middle');
@@ -3304,13 +3295,13 @@
       rg1.addColorStop(0,'#e34648'); rg1.addColorStop(1,'#9c1726');
       circle(80, stampY, stampR, rg1, '#6b0d18', 3);
       circle(80, stampY, stampR-7, null, 'rgba(255,255,255,0.6)', 1.5);
-      txt('宜', 80, stampY+2, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+      txt('宜', 80, stampY, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
 
       var rg2 = c.createLinearGradient(W-80-stampR, stampY-stampR, W-80+stampR, stampY+stampR);
       rg2.addColorStop(0, NAVY); rg2.addColorStop(1, NAVY_DARK);
       circle(W-80, stampY, stampR, rg2, '#06182f', 3);
       circle(W-80, stampY, stampR-7, null, 'rgba(255,255,255,0.55)', 1.5);
-      txt('忌', W-80, stampY+2, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+      txt('忌', W-80, stampY, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
 
       function drawList(items, x0, x1, top, color){
         if(!items || !items.length){
@@ -3360,8 +3351,23 @@
       var ftH = 80;
       rrect(22, ftY, W-44, ftH, 4, '#f1ece1', NAVY_LITE, 1);
 
-      circle(70, ftY+ftH/2, 28, '#fff', GOLD, 2);
-      txt('财', 70, ftY+ftH/2+1, 'bold 26px "STKaiti","KaiTi",serif', RED_DEEP, 'center','middle');
+      // 左下角logo - 使用用户提供的logo图片
+      var logoImg = new Image();
+      logoImg.src = 'images/logo.jpg';
+      logoImg.onload = function() {
+        c.save();
+        c.beginPath();
+        c.arc(70, ftY+ftH/2, 28, 0, Math.PI*2);
+        c.closePath();
+        c.clip();
+        c.drawImage(logoImg, 70-28, ftY+ftH/2-28, 56, 56);
+        c.restore();
+        c.strokeStyle = GOLD;
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(70, ftY+ftH/2, 28, 0, Math.PI*2);
+        c.stroke();
+      };
       txt('新西兰财神庙', 110, ftY+ftH/2-12, 'bold 22px "STKaiti","KaiTi",serif', NAVY, 'left','middle');
       txt('弘扬财神文化  造福华人社区', 110, ftY+ftH/2+14, '13px "STKaiti","KaiTi",serif', '#777', 'left','middle');
 

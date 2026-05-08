@@ -2826,6 +2826,90 @@
   // ── 三源道长版 PNG（图2 视觉母版：深蓝金边 + 山水 + 诸神方位 + 宜忌印 + 时运表）──
   function drawFromMasterTemplate(day, hours, personal){
     return new Promise(function(resolve){
+      // 预加载完整背景图、太极八卦图、财神图、喜神图、福神图和阳贵图
+      var fullBgImg = new Image();
+      fullBgImg.crossOrigin = 'anonymous';
+      fullBgImg.src = 'images/full-calendar-bg.png';
+
+      var baguaImg = new Image();
+      baguaImg.crossOrigin = 'anonymous';
+      baguaImg.src = 'images/new-bagua.png';
+
+      var caishenImg = new Image();
+      caishenImg.crossOrigin = 'anonymous';
+      caishenImg.src = 'images/财神.png';
+
+      var xishenImg = new Image();
+      xishenImg.crossOrigin = 'anonymous';
+      xishenImg.src = 'images/喜神.png';
+
+      var fushenImg = new Image();
+      fushenImg.crossOrigin = 'anonymous';
+      fushenImg.src = 'images/新福神.png';
+
+      var yangguiImg = new Image();
+      yangguiImg.crossOrigin = 'anonymous';
+      yangguiImg.src = 'images/新阳贵.png';
+
+      var loadedCount = 0;
+      var totalImages = 6;
+
+      function checkAllLoaded() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg);
+        }
+      }
+
+      fullBgImg.onload = checkAllLoaded;
+      fullBgImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(null, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg);
+        }
+      };
+
+      baguaImg.onload = checkAllLoaded;
+      baguaImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, null, caishenImg, xishenImg, fushenImg, yangguiImg);
+        }
+      };
+
+      caishenImg.onload = checkAllLoaded;
+      caishenImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, null, xishenImg, fushenImg, yangguiImg);
+        }
+      };
+
+      xishenImg.onload = checkAllLoaded;
+      xishenImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, caishenImg, null, fushenImg, yangguiImg);
+        }
+      };
+
+      fushenImg.onload = checkAllLoaded;
+      fushenImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, null, yangguiImg);
+        }
+      };
+
+      yangguiImg.onload = checkAllLoaded;
+      yangguiImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, null);
+        }
+      };
+
+      function drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg) {
       // ============ 画布与颜色 ============
       var W = 1080, H = 1560;
       var cv = document.createElement('canvas');
@@ -2871,32 +2955,52 @@
       function vGrad(x,y,w,h,c1,c2){ var g=c.createLinearGradient(x,y,x,y+h); g.addColorStop(0,c1); g.addColorStop(1,c2); return g; }
 
       // 太极 + 八卦短线（简化版）
+      // 太极八卦图（使用图片）
       function taiji(cx,cy,r){
-        // 八卦放射短线
-        c.save();
-        c.strokeStyle = '#a8842a';
-        c.lineWidth = 1.4;
-        for(var i=0;i<8;i++){
-          var a = (Math.PI*2*i)/8 - Math.PI/2;
-          c.beginPath();
-          c.moveTo(cx+Math.cos(a)*(r*1.05), cy+Math.sin(a)*(r*1.05));
-          c.lineTo(cx+Math.cos(a)*(r*1.22), cy+Math.sin(a)*(r*1.22));
-          c.stroke();
-        }
-        c.restore();
-        // 太极
-        circle(cx,cy,r,'#f3deaa','#9b7a26',2);
-        c.save();
-        c.beginPath(); c.arc(cx,cy,r,-Math.PI/2,Math.PI/2); c.fillStyle=NAVY_DARK; c.fill();
-        circle(cx,cy-r/2,r/2,'#f3deaa');
-        circle(cx,cy+r/2,r/2,NAVY_DARK);
-        circle(cx,cy-r/2,r*0.13,NAVY_DARK);
-        circle(cx,cy+r/2,r*0.13,'#f3deaa');
-        c.restore();
+        // 不再绘制旧的太极图，改为使用新的太极八卦图片
+        // 图片会在后面统一加载和绘制
       }
 
-      // 简化神像（朝服画像）
-      function deityPortrait(x, y, w, h, robe){
+      // 简化神像（朝服画像）- 财神、喜神、福神、阳贵使用真实图片
+      function deityPortrait(x, y, w, h, robe, godName, caishenImg, xishenImg, fushenImg, yangguiImg){
+        // 选择对应的图片
+        var godImg = null;
+        if(godName === '财神' && caishenImg && caishenImg.complete){
+          godImg = caishenImg;
+        } else if(godName === '喜神' && xishenImg && xishenImg.complete){
+          godImg = xishenImg;
+        } else if(godName === '福神' && fushenImg && fushenImg.complete){
+          godImg = fushenImg;
+        } else if(godName === '阳贵' && yangguiImg && yangguiImg.complete){
+          godImg = yangguiImg;
+        }
+
+        // 如果有对应的图片，使用真实图片
+        if(godImg){
+          c.save();
+
+          // 统一所有神像的显示高度为 120px（放大后的尺寸）
+          var uniformHeight = 120;
+          var imgAspect = godImg.width / godImg.height;
+          var targetH = uniformHeight;
+          var targetW = targetH * imgAspect;
+
+          // 如果宽度超出容器，则以宽度为准
+          if(targetW > w){
+            targetW = w;
+            targetH = targetW / imgAspect;
+          }
+
+          // 居中水平，底部对齐
+          var drawX = x + (w - targetW) / 2;
+          var drawY = y + h - targetH; // 底部对齐
+
+          c.drawImage(godImg, drawX, drawY, targetW, targetH);
+          c.restore();
+          return;
+        }
+
+        // 其他神使用原来的简笔画
         c.save();
         c.globalAlpha = 0.55;
         c.fillStyle = '#fbe6a8';
@@ -2953,7 +3057,7 @@
       // 八卦小图（圆 + 八向 + 高亮方位）
       function bagua(cx, cy, size, hiDir){
         var r = size/2;
-        circle(cx, cy, r, '#fffbef', NAVY, 1.2);
+        circle(cx, cy, r, 'rgba(255, 251, 239, 0.5)', NAVY, 1.2);
         var dirAngle = {
           '北':-Math.PI/2,'东北':-Math.PI/4,'东':0,'东南':Math.PI/4,
           '南':Math.PI/2,'西南':Math.PI*3/4,'西':Math.PI,'西北':-Math.PI*3/4
@@ -3012,12 +3116,12 @@
 
         var bodyY = y+headH;
         var bodyH = h - headH;
-        rrect(x, bodyY, w, bodyH, 4, '#ffffff', NAVY, 1);
+        rrect(x, bodyY, w, bodyH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1);
         var n = rows.length || 6;
         var rowH = bodyH / n;
         rows.forEach(function(r, i){
           var ry = bodyY + i*rowH;
-          if(i%2===1) rect(x+1, ry, w-2, rowH, '#f5f7fa');
+          if(i%2===1) rect(x+1, ry, w-2, rowH, 'rgba(245, 247, 250, 0.3)');
           if(i>0){
             c.strokeStyle = 'rgba(20,51,86,0.25)'; c.lineWidth = 1;
             c.beginPath(); c.moveTo(x+4, ry); c.lineTo(x+w-4, ry); c.stroke();
@@ -3088,9 +3192,22 @@
       }
 
       // ============ 1. 整体背景 ============
-      rect(0,0,W,H,'#f1ece1');
-      strokeRect(8,8,W-16,H-16,GOLD,3);
-      strokeRect(16,16,W-32,H-32,'rgba(212,175,55,0.55)',1);
+      // 如果完整背景图加载成功，使用水墨背景
+      if (fullBgImg) {
+        // 绘制完整水墨背景图（铺满整个画布）
+        c.drawImage(fullBgImg, 0, 0, W, H);
+
+        // 添加半透明白色遮罩，让文字更清晰
+        c.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        c.fillRect(0, 0, W, H);
+      } else {
+        // 如果背景图加载失败，使用原来的纯色背景
+        rect(0,0,W,H,'#f1ece1');
+      }
+
+      // 绘制蓝色边框（保留原有边框）
+      strokeRect(8,8,W-16,H-16,'#3a5e8a',3);
+      strokeRect(16,16,W-32,H-32,'rgba(58,94,138,0.55)',1);
 
       // ============ 2. 顶部牌头 ============
       var hdrY = 22, hdrH = 156;
@@ -3105,9 +3222,17 @@
       c.restore();
       strokeRect(34, hdrY+12, W-68, hdrH-24, 'rgba(212,175,55,0.7)', 1.2);
 
-      // 太极
-      taiji(120, hdrY+hdrH/2, 38);
-      taiji(W-120, hdrY+hdrH/2, 38);
+      // 绘制新的太极八卦图
+      if (baguaImg) {
+        var baguaSize = 85;
+        var baguaY = hdrY + hdrH/2;
+
+        // 左侧太极八卦
+        c.drawImage(baguaImg, 120 - baguaSize/2, baguaY - baguaSize/2, baguaSize, baguaSize);
+
+        // 右侧太极八卦
+        c.drawImage(baguaImg, W-120 - baguaSize/2, baguaY - baguaSize/2, baguaSize, baguaSize);
+      }
 
       // 标题
       c.save();
@@ -3128,62 +3253,32 @@
 
       // ============ 3. 主日期区 ============
       var dateH = 380;
-      rrect(22, Y, W-44, dateH, 4, vGrad(22,Y,W-44,dateH,'#eaf3f8','#cdddea'), NAVY_LITE, 1);
+      // 不绘制背景，让完整水墨背景透出来
+      // 只绘制边框
+      c.strokeStyle = NAVY_LITE;
+      c.lineWidth = 1;
+      c.strokeRect(22, Y, W-44, dateH);
 
-      // 山峦剪影
+      // 删除原来的山峦剪影（已经有完整水墨背景了）
+
+      // 中间淡背景大字"财神""日历" - 左右分组，中间留空给数字8
       c.save();
-      c.globalAlpha = 0.18;
-      c.fillStyle = '#5b7a98';
-      c.beginPath();
-      c.moveTo(22, Y+dateH);
-      c.lineTo(22, Y+dateH-90);
-      c.lineTo(120, Y+dateH-160);
-      c.lineTo(220, Y+dateH-110);
-      c.lineTo(310, Y+dateH-180);
-      c.lineTo(420, Y+dateH-90);
-      c.lineTo(420, Y+dateH);
-      c.closePath(); c.fill();
-      c.beginPath();
-      c.moveTo(W-22, Y+dateH);
-      c.lineTo(W-22, Y+dateH-110);
-      c.lineTo(W-130, Y+dateH-200);
-      c.lineTo(W-220, Y+dateH-130);
-      c.lineTo(W-330, Y+dateH-220);
-      c.lineTo(W-440, Y+dateH-130);
-      c.lineTo(W-540, Y+dateH-90);
-      c.lineTo(W-540, Y+dateH);
-      c.closePath(); c.fill();
-      c.restore();
-
-      // 右下塔 - 已删除，保持山水背景
-      // c.save();
-      // c.globalAlpha = 0.22;
-      // c.fillStyle = '#7d96b3'; c.strokeStyle = NAVY; c.lineWidth = 1.5;
-      // var ppx = W-160, ppy = Y+dateH-130;
-      // c.beginPath(); c.rect(ppx-30, ppy, 60, 90); c.fill(); c.stroke();
-      // c.beginPath();
-      // c.moveTo(ppx-50, ppy);
-      // c.lineTo(ppx+50, ppy);
-      // c.lineTo(ppx+30, ppy-25);
-      // c.lineTo(ppx-30, ppy-25);
-      // c.closePath(); c.fill(); c.stroke();
-      // c.beginPath();
-      // c.moveTo(ppx-35, ppy-25);
-      // c.lineTo(ppx+35, ppy-25);
-      // c.lineTo(ppx, ppy-50);
-      // c.closePath(); c.fill(); c.stroke();
-      // c.restore();
-
-      // 中间淡背景大字"财神""日历" - 调整字距和位置
-      c.save();
-      c.globalAlpha = 0.10;
-      c.font = 'bold 220px "STKaiti","KaiTi","STSong",serif';
+      c.globalAlpha = 0.16;
+      c.font = 'bold 140px "STKaiti","KaiTi","STSong",serif';
       c.fillStyle = NAVY;
-      c.textAlign = 'center'; c.textBaseline='middle';
-      c.fillText('财', W/2-360, Y+dateH/2-10);
-      c.fillText('神', W/2-120, Y+dateH/2-10);
-      c.fillText('日', W/2+130, Y+dateH/2+10);
-      c.fillText('历', W/2+360, Y+dateH/2+10);
+      c.textBaseline = 'middle';
+
+      // 统一的垂直位置（与数字8相同）
+      var watermarkY = Y + dateH/2 + 30;
+
+      // 左侧："财神" - 靠左放置，远离中间
+      c.textAlign = 'left';
+      c.fillText('财神', 80, watermarkY);
+
+      // 右侧："日历" - 靠右放置，远离中间
+      c.textAlign = 'right';
+      c.fillText('日历', W-80, watermarkY);
+
       c.restore();
 
       // 顶部三栏
@@ -3212,7 +3307,7 @@
 
       // ============ 4. 诸神方位 ============
       var godH = 264;
-      rrect(22, Y, W-44, godH, 4, '#fbf6e9', NAVY, 1.5);
+      rrect(22, Y, W-44, godH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
       var titW = 200, titH = 42;
       var tx0 = W/2 - titW/2, ty0 = Y - titH/2;
       rrect(tx0, ty0, titW, titH, 8, NAVY, GOLD, 2);
@@ -3242,11 +3337,11 @@
         }
         txt(g.name, cx, contentTop+8, 'bold 30px "STKaiti","KaiTi",serif', RED_DEEP, 'center','top');
         var dW = 96, dH = 40;
-        rrect(cx-dW/2, contentTop+52, dW, dH, 6, '#fff7f1', RED, 2);
+        rrect(cx-dW/2, contentTop+52, dW, dH, 6, 'rgba(255, 247, 241, 0.5)', RED, 2);
         txt(g.dir, cx, contentTop+52+dH/2+1, 'bold 22px "STKaiti","KaiTi",serif', RED_DEEP, 'center','middle');
         var py0 = contentTop+108;
         var portraitH = 110;
-        deityPortrait(cx-95, py0, 100, portraitH, g.color);
+        deityPortrait(cx-95, py0, 100, portraitH, g.color, g.name, caishenImg, xishenImg, fushenImg, yangguiImg);
         bagua(cx+58, py0+portraitH/2, 70, g.dir);
       });
 
@@ -3256,7 +3351,7 @@
       var chongH = 60;
       rrect(22, Y, 130, chongH, 4, NAVY, GOLD, 1.5);
       txt('冲煞', 22+65, Y+chongH/2+1, 'bold 28px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
-      rrect(160, Y, W-22-160, chongH, 4, '#fbf6e9', NAVY, 1);
+      rrect(160, Y, W-22-160, chongH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1);
 
       var chongDisplay = chongLine || '—';
       var sIdx = chongDisplay.indexOf('煞');
@@ -3280,7 +3375,7 @@
 
       // ============ 6. 宜 / 忌 ============
       var yjH = 180;
-      rrect(22, Y, W-44, yjH, 4, '#fdf7e3', NAVY, 1.5);
+      rrect(22, Y, W-44, yjH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
       c.save();
       c.strokeStyle = NAVY_LITE; c.lineWidth = 1.5; c.setLineDash([6,6]);
       c.beginPath(); c.moveTo(W/2, Y+10); c.lineTo(W/2, Y+yjH-10); c.stroke();
@@ -3330,7 +3425,7 @@
 
       // ============ 7. 今日时运 ============
       var hrH = H - Y - 80 - 22;
-      rrect(22, Y, W-44, hrH, 4, '#f5efde', NAVY, 1.5);
+      rrect(22, Y, W-44, hrH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
       var hrTitW = 220;
       rrect(W/2-hrTitW/2, Y-22, hrTitW, 44, 8, NAVY, GOLD, 2);
       txt('今日时运', W/2, Y, 'bold 26px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
@@ -3347,7 +3442,7 @@
       // ============ 8. 页脚 ============
       var ftY = H - 80 - 22;
       var ftH = 80;
-      rrect(22, ftY, W-44, ftH, 4, '#f1ece1', NAVY_LITE, 1);
+      rrect(22, ftY, W-44, ftH, 4, 'rgba(255, 255, 255, 0.35)', NAVY_LITE, 1);
 
       // 左下角logo - 使用用户提供的logo图片
       var logoImg = new Image();
@@ -3383,7 +3478,11 @@
       txt('以道传财    以德聚财    以善发财', W-50, ftY+ftH/2+14, '14px "STKaiti","KaiTi",serif', '#555', 'right','middle');
 
       // ============ 输出 ============
-      resolve(cv.toDataURL('image/png'));
+      setTimeout(function() {
+        resolve(cv.toDataURL('image/png'));
+      }, 100);
+
+      } // end of drawCanvas function
     });
   }
 

@@ -2011,10 +2011,19 @@
     var logoCY  = logoY+logoH/2;
     var logoIX  = jiBaseX+Math.round(JI_W*0.30);
     yin_yang(logoIX, logoCY, logoR);
+
+    // 八卦图安全区域：右边界 = logoIX + logoR + 安全间距
+    var baguaSafeRight = logoIX + logoR + 10;
+
+    // 文字位置：从八卦图安全区域右边界开始，居中于剩余空间
+    var textAreaLeft = baguaSafeRight;
+    var textAreaRight = jiBaseX + JI_W;
+    var textCenterX = (textAreaLeft + textAreaRight) / 2;
+
     var logoFSz = Math.round(logoH*0.155);
-    txt('新西兰',    jiBaseX+Math.round(JI_W*0.62), logoCY-Math.round(logoFSz*0.65),
+    txt('新西兰',    textCenterX, logoCY-Math.round(logoFSz*0.65),
         'bold '+logoFSz+'px "STKaiti","PingFang SC",serif', BROWN2, 'center','middle');
-    txt('道教联合会', jiBaseX+Math.round(JI_W*0.62), logoCY+Math.round(logoFSz*0.65),
+    txt('道教联合会', textCenterX, logoCY+Math.round(logoFSz*0.65),
         'bold '+logoFSz+'px "STKaiti","PingFang SC",serif', BROWN2, 'center','middle');
     // 忌内容（字符区：logo上方）
     var jiFontSz  = Math.round(JI_W*0.108);
@@ -2826,14 +2835,26 @@
   // ── 三源道长版 PNG（图2 视觉母版：深蓝金边 + 山水 + 诸神方位 + 宜忌印 + 时运表）──
   function drawFromMasterTemplate(day, hours, personal){
     return new Promise(function(resolve){
-      // 预加载完整背景图、太极八卦图、财神图、喜神图、福神图和阳贵图
+      // 预加载完整背景图、新Header图、诸神方位图、冲煞图、今日时运图、财神图、喜神图、福神图和阳贵图
       var fullBgImg = new Image();
       fullBgImg.crossOrigin = 'anonymous';
       fullBgImg.src = 'images/full-calendar-bg.png';
 
-      var baguaImg = new Image();
-      baguaImg.crossOrigin = 'anonymous';
-      baguaImg.src = 'images/new-bagua.png';
+      var headerImg = new Image();
+      headerImg.crossOrigin = 'anonymous';
+      headerImg.src = 'images/顶部栏.png';
+
+      var zhushenImg = new Image();
+      zhushenImg.crossOrigin = 'anonymous';
+      zhushenImg.src = 'images/诸神方位.png';
+
+      var chongshaImg = new Image();
+      chongshaImg.crossOrigin = 'anonymous';
+      chongshaImg.src = 'images/冲煞0001.png';
+
+      var jiriyunImg = new Image();
+      jiriyunImg.crossOrigin = 'anonymous';
+      jiriyunImg.src = 'images/今日时运0001.png';
 
       var caishenImg = new Image();
       caishenImg.crossOrigin = 'anonymous';
@@ -2860,12 +2881,12 @@
       jiIconImg.src = 'images/忌001.png';
 
       var loadedCount = 0;
-      var totalImages = 8;
+      var totalImages = 11;
 
       function checkAllLoaded() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       }
 
@@ -2873,15 +2894,39 @@
       fullBgImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(null, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+          drawCanvas(null, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
-      baguaImg.onload = checkAllLoaded;
-      baguaImg.onerror = function() {
+      headerImg.onload = checkAllLoaded;
+      headerImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, null, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+          drawCanvas(fullBgImg, null, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+        }
+      };
+
+      zhushenImg.onload = checkAllLoaded;
+      zhushenImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, headerImg, null, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+        }
+      };
+
+      chongshaImg.onload = checkAllLoaded;
+      chongshaImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, headerImg, zhushenImg, null, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+        }
+      };
+
+      jiriyunImg.onload = checkAllLoaded;
+      jiriyunImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, null, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2889,7 +2934,7 @@
       caishenImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, null, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, null, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2897,7 +2942,7 @@
       xishenImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, null, fushenImg, yangguiImg, yiIconImg, jiIconImg);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, null, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2905,7 +2950,7 @@
       fushenImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, null, yangguiImg, yiIconImg, jiIconImg);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, null, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2913,7 +2958,7 @@
       yangguiImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, null, yiIconImg, jiIconImg);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, null, yiIconImg, jiIconImg);
         }
       };
 
@@ -2921,7 +2966,7 @@
       yiIconImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, null, jiIconImg);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, null, jiIconImg);
         }
       };
 
@@ -2929,11 +2974,11 @@
       jiIconImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, null);
+          drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, null);
         }
       };
 
-      function drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg) {
+      function drawCanvas(fullBgImg, headerImg, zhushenImg, chongshaImg, jiriyunImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg) {
       // ============ 画布与颜色 ============
       var W = 1080, H = 1560;
       var cv = document.createElement('canvas');
@@ -3233,45 +3278,92 @@
       strokeRect(8,8,W-16,H-16,'#3a5e8a',3);
       strokeRect(16,16,W-32,H-32,'rgba(58,94,138,0.55)',1);
 
-      // ============ 2. 顶部牌头 ============
-      var hdrY = 22, hdrH = 156;
-      rrect(22, hdrY, W-44, hdrH, 6, vGrad(0,hdrY,W,hdrH,NAVY_DARK,NAVY), GOLD, 2.5);
-      // 横向极淡纹路
-      c.save();
-      c.globalAlpha = 0.08;
-      c.strokeStyle = GOLD; c.lineWidth = 1;
-      for(var ty=hdrY+8; ty<hdrY+hdrH; ty+=6){
-        c.beginPath(); c.moveTo(28,ty); c.lineTo(W-28,ty); c.stroke();
+      // ============ 2. 顶部 Header 图片 ============
+      var hdrY = 22;
+      var hdrH = 156; // 默认高度
+
+      if (headerImg && headerImg.complete && headerImg.naturalWidth > 0) {
+        // 使用新的 Header 图片，裁切掉上下白边
+        // 检测蓝色横幅的实际区域（排除白边）
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = headerImg.naturalWidth;
+        tempCanvas.height = headerImg.naturalHeight;
+        var tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(headerImg, 0, 0);
+
+        var imageData = tempCtx.getImageData(0, 0, headerImg.naturalWidth, headerImg.naturalHeight);
+        var data = imageData.data;
+
+        // 找到非白色区域的边界
+        var minY = headerImg.naturalHeight, maxY = 0;
+        var found = false;
+
+        for (var y = 0; y < headerImg.naturalHeight; y++) {
+          for (var x = 0; x < headerImg.naturalWidth; x++) {
+            var i = (y * headerImg.naturalWidth + x) * 4;
+            var r = data[i];
+            var g = data[i + 1];
+            var b = data[i + 2];
+            var a = data[i + 3];
+
+            // 判断是否为非白色像素（蓝色横幅区域）
+            var isContent = a > 200 && (r < 240 || g < 240 || b < 240);
+
+            if (isContent) {
+              found = true;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (found) {
+          // 裁切参数：只保留蓝色横幅区域
+          var sourceX = 0;
+          var sourceY = minY;
+          var sourceWidth = headerImg.naturalWidth;
+          var sourceHeight = maxY - minY + 1;
+
+          // 目标尺寸：宽度撑满，高度按比例
+          var headerWidth = W - 44;
+          var headerHeight = (sourceHeight / sourceWidth) * headerWidth;
+          var headerX = 22;
+
+          // 使用 9 参数 drawImage 裁切绘制
+          c.drawImage(headerImg,
+            sourceX, sourceY, sourceWidth, sourceHeight,  // 源图裁切区域（只取蓝色横幅）
+            headerX, hdrY, headerWidth, headerHeight);     // 目标绘制区域
+
+          hdrH = headerHeight; // 更新 Header 高度
+        } else {
+          // 如果检测失败，使用降级方案
+          var headerWidth = W - 44;
+          var headerHeight = (headerImg.naturalHeight / headerImg.naturalWidth) * headerWidth;
+          c.drawImage(headerImg, 22, hdrY, headerWidth, headerHeight);
+          hdrH = headerHeight;
+        }
+      } else {
+        // 降级方案：使用旧的绘制方式
+        rrect(22, hdrY, W-44, hdrH, 6, vGrad(0,hdrY,W,hdrH,NAVY_DARK,NAVY), GOLD, 2.5);
+        c.save();
+        c.globalAlpha = 0.08;
+        c.strokeStyle = GOLD; c.lineWidth = 1;
+        for(var ty=hdrY+8; ty<hdrY+hdrH; ty+=6){
+          c.beginPath(); c.moveTo(28,ty); c.lineTo(W-28,ty); c.stroke();
+        }
+        c.restore();
+        strokeRect(34, hdrY+12, W-68, hdrH-24, 'rgba(212,175,55,0.7)', 1.2);
+
+        c.save();
+        c.shadowColor = 'rgba(255,210,120,0.55)';
+        c.shadowBlur = 14;
+        txt('新西兰财神庙', W/2, hdrY+hdrH/2-8, 'bold 70px "STKaiti","KaiTi","STSong","PingFang SC",serif', GOLD, 'center','middle');
+        c.restore();
+        c.strokeStyle = GOLD; c.lineWidth = 1.2;
+        c.beginPath(); c.moveTo(W/2-220, hdrY+hdrH/2+34); c.lineTo(W/2-130, hdrY+hdrH/2+34); c.stroke();
+        c.beginPath(); c.moveTo(W/2+130, hdrY+hdrH/2+34); c.lineTo(W/2+220, hdrY+hdrH/2+34); c.stroke();
+        txt('三源道长监制', W/2, hdrY+hdrH/2+54, '20px "STKaiti","KaiTi",serif', '#e9c977', 'center','middle');
       }
-      c.restore();
-      strokeRect(34, hdrY+12, W-68, hdrH-24, 'rgba(212,175,55,0.7)', 1.2);
-
-      // 绘制新的太极八卦图（放大1.5倍）
-      if (baguaImg) {
-        var baguaSize = 128;  // 从85放大到128 (85 * 1.5 ≈ 128)
-        var baguaY = hdrY + hdrH/2;
-
-        // 左侧太极八卦
-        c.drawImage(baguaImg, 120 - baguaSize/2, baguaY - baguaSize/2, baguaSize, baguaSize);
-
-        // 右侧太极八卦
-        c.drawImage(baguaImg, W-120 - baguaSize/2, baguaY - baguaSize/2, baguaSize, baguaSize);
-      }
-
-      // 标题
-      c.save();
-      c.shadowColor = 'rgba(255,210,120,0.55)';
-      c.shadowBlur = 14;
-      txt('新西兰财神庙', W/2, hdrY+hdrH/2-8, 'bold 70px "STKaiti","KaiTi","STSong","PingFang SC",serif', GOLD, 'center','middle');
-      c.restore();
-      c.strokeStyle = GOLD; c.lineWidth = 1.2;
-      c.beginPath(); c.moveTo(W/2-220, hdrY+hdrH/2+34); c.lineTo(W/2-130, hdrY+hdrH/2+34); c.stroke();
-      c.beginPath(); c.moveTo(W/2+130, hdrY+hdrH/2+34); c.lineTo(W/2+220, hdrY+hdrH/2+34); c.stroke();
-      txt('三源道长监制', W/2, hdrY+hdrH/2+54, '20px "STKaiti","KaiTi",serif', '#e9c977', 'center','middle');
-
-      // 左上角区域 - 已删除关闭按钮，保持深蓝背景
-
-      // 右上角区域 - 已删除日期显示，保持深蓝背景
 
       var Y = hdrY + hdrH + 6;
 
@@ -3332,10 +3424,83 @@
       // ============ 4. 诸神方位 ============
       var godH = 264;
       rrect(22, Y, W-44, godH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
+
+      // 诸神方位标题牌
       var titW = 200, titH = 42;
       var tx0 = W/2 - titW/2, ty0 = Y - titH/2;
-      rrect(tx0, ty0, titW, titH, 8, NAVY, GOLD, 2);
-      txt('诸神方位', W/2, ty0+titH/2+1, 'bold 24px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+
+      if (zhushenImg && zhushenImg.complete && zhushenImg.naturalWidth > 0) {
+        // 使用新的诸神方位图片，裁切掉白边
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = zhushenImg.naturalWidth;
+        tempCanvas.height = zhushenImg.naturalHeight;
+        var tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(zhushenImg, 0, 0);
+
+        var imageData = tempCtx.getImageData(0, 0, zhushenImg.naturalWidth, zhushenImg.naturalHeight);
+        var data = imageData.data;
+
+        // 找到非白色/非透明区域的边界
+        var minX = zhushenImg.naturalWidth, minY = zhushenImg.naturalHeight;
+        var maxX = 0, maxY = 0;
+        var found = false;
+
+        for (var y = 0; y < zhushenImg.naturalHeight; y++) {
+          for (var x = 0; x < zhushenImg.naturalWidth; x++) {
+            var i = (y * zhushenImg.naturalWidth + x) * 4;
+            var r = data[i];
+            var g = data[i + 1];
+            var b = data[i + 2];
+            var a = data[i + 3];
+
+            // 判断是否为非白色像素（蓝色牌匾区域）
+            var isContent = a > 200 && (r < 240 || g < 240 || b < 240);
+
+            if (isContent) {
+              found = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (found) {
+          // 裁切参数：只保留蓝色牌匾区域
+          var sourceX = minX;
+          var sourceY = minY;
+          var sourceWidth = maxX - minX + 1;
+          var sourceHeight = maxY - minY + 1;
+
+          // 目标尺寸：整体放大1.3倍
+          var targetWidth = titW * 1.3;
+          var targetHeight = (sourceHeight / sourceWidth) * targetWidth;
+
+          // 如果高度超过原按钮高度的1.3倍，以高度为准
+          if (targetHeight > titH * 1.3) {
+            targetHeight = titH * 1.3;
+            targetWidth = (sourceWidth / sourceHeight) * targetHeight;
+          }
+
+          // 居中绘制
+          var drawX = W/2 - targetWidth/2;
+          var drawY = ty0 + (titH - targetHeight)/2;
+
+          // 使用 9 参数 drawImage 裁切绘制
+          c.drawImage(zhushenImg,
+            sourceX, sourceY, sourceWidth, sourceHeight,  // 源图裁切区域（只取蓝色牌匾）
+            drawX, drawY, targetWidth, targetHeight);      // 目标绘制区域
+        } else {
+          // 检测失败，使用降级方案
+          rrect(tx0, ty0, titW, titH, 8, NAVY, GOLD, 2);
+          txt('诸神方位', W/2, ty0+titH/2+1, 'bold 24px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+        }
+      } else {
+        // 图片未加载，使用降级方案
+        rrect(tx0, ty0, titW, titH, 8, NAVY, GOLD, 2);
+        txt('诸神方位', W/2, ty0+titH/2+1, 'bold 24px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      }
 
       var gods = [
         {name:'财神',  dir:dirs.cai     || '—', color:'#c9a23a'},
@@ -3396,8 +3561,78 @@
 
       // ============ 5. 冲煞条 ============
       var chongH = 60;
-      rrect(22, Y, 130, chongH, 4, NAVY, GOLD, 1.5);
-      txt('冲煞', 22+65, Y+chongH/2+1, 'bold 32px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+      var chongTitleW = 130;
+      var chongTitleX = 22;
+      var chongTitleY = Y;
+
+      if (chongshaImg && chongshaImg.complete && chongshaImg.naturalWidth > 0) {
+        // 使用新的冲煞图片，裁切透明边距
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = chongshaImg.naturalWidth;
+        tempCanvas.height = chongshaImg.naturalHeight;
+        var tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(chongshaImg, 0, 0);
+
+        var imageData = tempCtx.getImageData(0, 0, chongshaImg.naturalWidth, chongshaImg.naturalHeight);
+        var data = imageData.data;
+
+        // 找到非透明区域的边界
+        var minX = chongshaImg.naturalWidth, minY = chongshaImg.naturalHeight;
+        var maxX = 0, maxY = 0;
+        var found = false;
+
+        for (var y = 0; y < chongshaImg.naturalHeight; y++) {
+          for (var x = 0; x < chongshaImg.naturalWidth; x++) {
+            var i = (y * chongshaImg.naturalWidth + x) * 4;
+            var a = data[i + 3];
+
+            // 判断是否为非透明像素
+            if (a > 30) {
+              found = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (found) {
+          // 裁切参数：只保留可见内容区域
+          var sourceX = minX;
+          var sourceY = minY;
+          var sourceWidth = maxX - minX + 1;
+          var sourceHeight = maxY - minY + 1;
+
+          // 目标尺寸：整体放大1.3倍
+          var targetHeight = (chongH - 8) * 1.3; // 留出上下边距，整体放大1.3倍
+          var targetWidth = (sourceWidth / sourceHeight) * targetHeight;
+
+          // 如果宽度超过区域的1.3倍，以宽度为准
+          if (targetWidth > (chongTitleW - 8) * 1.3) {
+            targetWidth = (chongTitleW - 8) * 1.3;
+            targetHeight = (sourceHeight / sourceWidth) * targetWidth;
+          }
+
+          // 居中绘制
+          var drawX = chongTitleX + (chongTitleW - targetWidth) / 2;
+          var drawY = chongTitleY + (chongH - targetHeight) / 2;
+
+          // 使用 9 参数 drawImage 裁切绘制
+          c.drawImage(chongshaImg,
+            sourceX, sourceY, sourceWidth, sourceHeight,  // 源图裁切区域（去除透明边距）
+            drawX, drawY, targetWidth, targetHeight);      // 目标绘制区域
+        } else {
+          // 检测失败，使用降级方案
+          rrect(chongTitleX, chongTitleY, chongTitleW, chongH, 4, NAVY, GOLD, 1.5);
+          txt('冲煞', chongTitleX+chongTitleW/2, chongTitleY+chongH/2+1, 'bold 32px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+        }
+      } else {
+        // 图片未加载，使用降级方案
+        rrect(chongTitleX, chongTitleY, chongTitleW, chongH, 4, NAVY, GOLD, 1.5);
+        txt('冲煞', chongTitleX+chongTitleW/2, chongTitleY+chongH/2+1, 'bold 32px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+      }
+
       rrect(160, Y, W-22-160, chongH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1);
 
       var chongDisplay = chongLine || '—';
@@ -3646,8 +3881,76 @@
       var hrH = H - Y - 80 - 22;
       rrect(22, Y, W-44, hrH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
       var hrTitW = 220;
-      rrect(W/2-hrTitW/2, Y-22, hrTitW, 44, 8, NAVY, GOLD, 2);
-      txt('今日时运', W/2, Y, 'bold 28px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+      var hrTitH = 44;
+
+      // 使用PNG图片替换"今日时运"标题牌匾
+      if (jiriyunImg && jiriyunImg.complete && jiriyunImg.naturalWidth > 0) {
+        // 创建临时canvas检测图片边界
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = jiriyunImg.naturalWidth;
+        tempCanvas.height = jiriyunImg.naturalHeight;
+        var tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(jiriyunImg, 0, 0);
+
+        try {
+          var imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+          var pixels = imgData.data;
+
+          // 检测非透明且非白色区域的边界
+          var minX = tempCanvas.width, minY = tempCanvas.height;
+          var maxX = 0, maxY = 0;
+
+          for (var py = 0; py < tempCanvas.height; py++) {
+            for (var px = 0; px < tempCanvas.width; px++) {
+              var idx = (py * tempCanvas.width + px) * 4;
+              var r = pixels[idx];
+              var g = pixels[idx + 1];
+              var b = pixels[idx + 2];
+              var a = pixels[idx + 3];
+
+              // 非透明且非白色（r/g/b < 250）
+              if (a > 30 && (r < 250 || g < 250 || b < 250)) {
+                if (px < minX) minX = px;
+                if (px > maxX) maxX = px;
+                if (py < minY) minY = py;
+                if (py > maxY) maxY = py;
+              }
+            }
+          }
+
+          // 如果检测到有效边界，使用裁切后的图片
+          if (maxX > minX && maxY > minY) {
+            var contentW = maxX - minX + 1;
+            var contentH = maxY - minY + 1;
+
+            // 目标尺寸放大1.2倍
+            var targetW = hrTitW * 1.2;
+            var targetH = hrTitH * 1.2;
+
+            // 居中绘制
+            var drawX = W/2 - targetW/2;
+            var drawY = Y - 22 - (targetH - hrTitH) / 2;
+
+            c.drawImage(
+              jiriyunImg,
+              minX, minY, contentW, contentH,
+              drawX, drawY, targetW, targetH
+            );
+          } else {
+            // 检测失败，使用降级方案
+            rrect(W/2-hrTitW/2, Y-22, hrTitW, hrTitH, 8, NAVY, GOLD, 2);
+            txt('今日时运', W/2, Y, 'bold 28px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+          }
+        } catch(e) {
+          // 像素读取失败，使用降级方案
+          rrect(W/2-hrTitW/2, Y-22, hrTitW, hrTitH, 8, NAVY, GOLD, 2);
+          txt('今日时运', W/2, Y, 'bold 28px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+        }
+      } else {
+        // 图片未加载，使用降级方案
+        rrect(W/2-hrTitW/2, Y-22, hrTitW, hrTitH, 8, NAVY, GOLD, 2);
+        txt('今日时运', W/2, Y, 'bold 28px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+      }
 
       var pad = 30;
       var tableY = Y + 36;

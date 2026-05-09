@@ -32,7 +32,7 @@ def _ask(question: str, visible_prompt: str, lang: str) -> str:
         pass
 
     api_key = os.environ.get("OPENAI_API_KEY", "")
-    model   = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    model   = os.environ.get("OPENAI_MODEL", "ft:gpt-4.1-mini-2025-04-14:personal:daoai:DYWmVntO")
 
     if not api_key or api_key.startswith("sk-your"):
         return ""

@@ -2723,9 +2723,9 @@
       c.lineTo(x+w,y+25);
       c.stroke();
 
-      txt('时辰', x+w*0.25, y+12.5, 'bold 12px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
-      txt('吉凶', x+w*0.5, y+12.5, 'bold 12px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
-      txt('时运简述', x+w*0.75, y+12.5, 'bold 12px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      txt('时辰', x+w*0.25, y+12.5, 'bold 14px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+      txt('吉凶', x+w*0.5, y+12.5, 'bold 14px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+      txt('时运简述', x+w*0.75, y+12.5, 'bold 14px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
 
       // 行
       var rowH = (h-25)/hourData.length;
@@ -2746,15 +2746,15 @@
 
         var timeRange = hour.time_range || hour.time || '';
         var label = hour.label || '';
-        txt(timeRange, x+10, ry+rowH*0.25, '9px Arial', GRAY, 'left','middle');
-        txt(label, x+10, ry+rowH*0.65, 'bold 11px "STKaiti","KaiTi",serif', TEXT_DARK, 'left','middle');
+        txt(timeRange, x+10, ry+rowH*0.25, 'bold 11px Arial', GRAY, 'left','middle');
+        txt(label, x+10, ry+rowH*0.65, 'bold 14px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', TEXT_DARK, 'left','middle');
 
         var luck = hour.luck || '平';
         var luckColor = luck==='吉'?GREEN:luck==='凶'||luck==='大凶'?RED:GRAY;
-        txt(luck, x+w*0.5, ry+rowH/2, 'bold 12px "STKaiti","KaiTi",serif', luckColor, 'center','middle');
+        txt(luck, x+w*0.5, ry+rowH/2, 'bold 15px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', luckColor, 'center','middle');
 
         var desc = (hour.yi && hour.yi.length>0) ? hour.yi.slice(0,2).join('、') : '—';
-        c.font = '9px "STKaiti","KaiTi",serif';
+        c.font = 'bold 11px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif';
         c.fillStyle = '#495057';
         var descLines = wrapText(desc, w*0.35);
         descLines.slice(0,2).forEach(function(line, li){
@@ -2837,27 +2837,35 @@
 
       var caishenImg = new Image();
       caishenImg.crossOrigin = 'anonymous';
-      caishenImg.src = 'images/财神.png';
+      caishenImg.src = 'images/新财神001.png';
 
       var xishenImg = new Image();
       xishenImg.crossOrigin = 'anonymous';
-      xishenImg.src = 'images/喜神.png';
+      xishenImg.src = 'images/喜神001.png';
 
       var fushenImg = new Image();
       fushenImg.crossOrigin = 'anonymous';
-      fushenImg.src = 'images/新福神.png';
+      fushenImg.src = 'images/福神001.png';
 
       var yangguiImg = new Image();
       yangguiImg.crossOrigin = 'anonymous';
-      yangguiImg.src = 'images/新阳贵.png';
+      yangguiImg.src = 'images/新阳贵001.png';
+
+      var yiIconImg = new Image();
+      yiIconImg.crossOrigin = 'anonymous';
+      yiIconImg.src = 'images/宜001.png';
+
+      var jiIconImg = new Image();
+      jiIconImg.crossOrigin = 'anonymous';
+      jiIconImg.src = 'images/忌001.png';
 
       var loadedCount = 0;
-      var totalImages = 6;
+      var totalImages = 8;
 
       function checkAllLoaded() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg);
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       }
 
@@ -2865,7 +2873,7 @@
       fullBgImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(null, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg);
+          drawCanvas(null, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2873,7 +2881,7 @@
       baguaImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, null, caishenImg, xishenImg, fushenImg, yangguiImg);
+          drawCanvas(fullBgImg, null, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2881,7 +2889,7 @@
       caishenImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, null, xishenImg, fushenImg, yangguiImg);
+          drawCanvas(fullBgImg, baguaImg, null, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2889,7 +2897,7 @@
       xishenImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, null, fushenImg, yangguiImg);
+          drawCanvas(fullBgImg, baguaImg, caishenImg, null, fushenImg, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2897,7 +2905,7 @@
       fushenImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, null, yangguiImg);
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, null, yangguiImg, yiIconImg, jiIconImg);
         }
       };
 
@@ -2905,11 +2913,27 @@
       yangguiImg.onerror = function() {
         loadedCount++;
         if (loadedCount === totalImages) {
-          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, null);
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, null, yiIconImg, jiIconImg);
         }
       };
 
-      function drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg) {
+      yiIconImg.onload = checkAllLoaded;
+      yiIconImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, null, jiIconImg);
+        }
+      };
+
+      jiIconImg.onload = checkAllLoaded;
+      jiIconImg.onerror = function() {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, null);
+        }
+      };
+
+      function drawCanvas(fullBgImg, baguaImg, caishenImg, xishenImg, fushenImg, yangguiImg, yiIconImg, jiIconImg) {
       // ============ 画布与颜色 ============
       var W = 1080, H = 1560;
       var cv = document.createElement('canvas');
@@ -2979,8 +3003,8 @@
         if(godImg){
           c.save();
 
-          // 统一所有神像的显示高度为 120px（放大后的尺寸）
-          var uniformHeight = 120;
+          // 统一所有神像的显示高度为 300px
+          var uniformHeight = 300;
           var imgAspect = godImg.width / godImg.height;
           var targetH = uniformHeight;
           var targetW = targetH * imgAspect;
@@ -3109,10 +3133,10 @@
         var col2 = w*0.14;
         var col3 = w*0.13;
         var col4 = w - col1 - col2 - col3;
-        txt('时辰',  x+col1/2,            y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
-        txt('时支',  x+col1+col2/2,       y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
-        txt('吉凶',  x+col1+col2+col3/2,  y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
-        txt('时运简述', x+col1+col2+col3+col4/2, y+headH/2+1, 'bold 18px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+        txt('时辰',  x+col1/2,            y+headH/2+1, 'bold 20px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+        txt('时支',  x+col1+col2/2,       y+headH/2+1, 'bold 20px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+        txt('吉凶',  x+col1+col2+col3/2,  y+headH/2+1, 'bold 20px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
+        txt('时运简述', x+col1+col2+col3+col4/2, y+headH/2+1, 'bold 20px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
 
         var bodyY = y+headH;
         var bodyH = h - headH;
@@ -3132,24 +3156,24 @@
           c.beginPath(); c.moveTo(x+col1+col2+col3, ry); c.lineTo(x+col1+col2+col3, ry+rowH); c.stroke();
 
           var rangeText = (r.range || r.time_range || '').replace(/-/, '-');
-          txt(rangeText, x+col1/2, ry+rowH/2+1, '15px "STKaiti","KaiTi",Arial', TEXT, 'center','middle');
+          txt(rangeText, x+col1/2, ry+rowH/2+1, 'bold 17px "STKaiti","KaiTi","SimKai","FZKai-Z03S",Arial', TEXT, 'center','middle');
           var zhi = r.zhi || (r.label||'').replace('时','');
-          txt(zhi+'时', x+col1+col2/2, ry+rowH/2+1, 'bold 16px "STKaiti","KaiTi",serif', TEXT, 'center','middle');
+          txt(zhi+'时', x+col1+col2/2, ry+rowH/2+1, 'bold 18px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', TEXT, 'center','middle');
 
           var luck = r.luck || '平';
           var luckColor = '#5a5a5a';
           if(luck.indexOf('吉')>=0) luckColor = RED;
           else if(luck.indexOf('凶')>=0) luckColor = NAVY;
-          var luckFont = (luck==='大凶' ? 'bold 14px ' : 'bold 18px ') + '"STKaiti","KaiTi",serif';
+          var luckFont = (luck==='大凶' ? 'bold 16px ' : 'bold 20px ') + '"STKaiti","KaiTi","SimKai","FZKai-Z03S",serif';
           txt(luck, x+col1+col2+col3/2, ry+rowH/2+1, luckFont, luckColor, 'center','middle');
 
           var desc = describeHour(luck, i);
           var maxDescW = col4 - 16;
-          var fs = 15;
-          c.font = fs+'px "STKaiti","KaiTi","PingFang SC",serif';
-          while(c.measureText(desc).width > maxDescW && fs > 11){
+          var fs = 17;
+          c.font = 'bold '+fs+'px "STKaiti","KaiTi","SimKai","FZKai-Z03S","PingFang SC",serif';
+          while(c.measureText(desc).width > maxDescW && fs > 13){
             fs--;
-            c.font = fs+'px "STKaiti","KaiTi","PingFang SC",serif';
+            c.font = 'bold '+fs+'px "STKaiti","KaiTi","SimKai","FZKai-Z03S","PingFang SC",serif';
           }
           c.fillStyle = '#333';
           c.textAlign = 'left'; c.textBaseline='middle';
@@ -3222,9 +3246,9 @@
       c.restore();
       strokeRect(34, hdrY+12, W-68, hdrH-24, 'rgba(212,175,55,0.7)', 1.2);
 
-      // 绘制新的太极八卦图
+      // 绘制新的太极八卦图（放大1.5倍）
       if (baguaImg) {
-        var baguaSize = 85;
+        var baguaSize = 128;  // 从85放大到128 (85 * 1.5 ≈ 128)
         var baguaY = hdrY + hdrH/2;
 
         // 左侧太极八卦
@@ -3283,16 +3307,16 @@
 
       // 顶部三栏
       var topRow = Y+50;
-      txt(WD_EN, 80, topRow, 'bold 30px "Times New Roman","STSong",serif', TEXT, 'left','middle');
+      var leftAlignX = 80;  // 统一的左对齐位置
+      txt(WD_EN, leftAlignX, topRow, 'bold 30px "Times New Roman","STSong",serif', TEXT, 'left','middle');
       txt(YR+' '+MO, W/2, topRow, 'bold 36px "STKaiti","STSong","PingFang SC",serif', TEXT, 'center','middle');
       c.strokeStyle = NAVY_LITE; c.lineWidth = 1.5;
       c.beginPath(); c.moveTo(W/2-150, topRow); c.lineTo(W/2-100, topRow); c.stroke();
       c.beginPath(); c.moveTo(W/2+100, topRow); c.lineTo(W/2+150, topRow); c.stroke();
       txt(ganzhiText, W-80, topRow, 'bold 24px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'right','middle');
 
-      // 农历日期 - 纯文字显示，避开Wednesday和背景大字
-      var ln_x = 100, ln_y = topRow + 50;  // Wednesday下方，留足间距
-      // 删除蓝色方框，只显示农历日期文字
+      // 农历日期 - 与 Saturday 左对齐
+      var ln_x = leftAlignX, ln_y = topRow + 50;
       txt(lunarStr, ln_x, ln_y, 'bold 24px "STKaiti","KaiTi","PingFang SC",serif', TEXT, 'left','middle');
 
       // 大数字
@@ -3324,25 +3348,48 @@
       var contentH   = godH - 50;
 
       gods.forEach(function(g, i){
-        var cx = 22 + colW*i + colW/2;
+        var colLeft = 22 + colW*i;
+        var cx = colLeft + colW/2;
+
+        // 分隔线
         if(i>0){
           c.strokeStyle = 'rgba(20,51,86,0.35)';
           c.lineWidth = 1;
           c.setLineDash([4,4]);
           c.beginPath();
-          c.moveTo(22+colW*i, contentTop);
-          c.lineTo(22+colW*i, contentTop+contentH-10);
+          c.moveTo(colLeft, contentTop);
+          c.lineTo(colLeft, contentTop+contentH-10);
           c.stroke();
           c.setLineDash([]);
         }
-        txt(g.name, cx, contentTop+8, 'bold 30px "STKaiti","KaiTi",serif', RED_DEEP, 'center','top');
+
+        // 布局：神像在左，文字和罗盘在右侧，垂直对齐
+        var portraitX = colLeft + 10;  // 神像X位置（左侧）
+        var portraitW = 170;  // 神像容器宽度（增大以容纳300px高度的神像）
+        var portraitH = 300;  // 神像容器高度（300px）
+        var py0 = contentTop - 55;  // 神像Y位置（往上移，让底部保持不变）
+
+        // 右侧区域的中轴线（文字和罗盘共用）
+        var rightCenterX = colLeft + colW - 55;  // 右侧中轴线X坐标
+
+        var textY = contentTop + 20;  // 文字Y位置（偏上）
+
+        var baguaX = rightCenterX;  // 罗盘X位置（与文字中轴线对齐）
+        var baguaY = py0 + portraitH - 75;  // 罗盘Y位置（继续向上移动10个单位，从-65改为-75）
+
+        // 绘制神名（居中对齐到右侧中轴线）
+        txt(g.name, rightCenterX, textY, 'bold 36px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', RED_DEEP, 'center','top');
+
+        // 绘制方位按钮（居中对齐到右侧中轴线）
         var dW = 96, dH = 40;
-        rrect(cx-dW/2, contentTop+52, dW, dH, 6, 'rgba(255, 247, 241, 0.5)', RED, 2);
-        txt(g.dir, cx, contentTop+52+dH/2+1, 'bold 22px "STKaiti","KaiTi",serif', RED_DEEP, 'center','middle');
-        var py0 = contentTop+108;
-        var portraitH = 110;
-        deityPortrait(cx-95, py0, 100, portraitH, g.color, g.name, caishenImg, xishenImg, fushenImg, yangguiImg);
-        bagua(cx+58, py0+portraitH/2, 70, g.dir);
+        rrect(rightCenterX-dW/2, textY+50, dW, dH, 6, 'rgba(255, 247, 241, 0.5)', RED, 2);
+        txt(g.dir, rightCenterX, textY+50+dH/2+1, 'bold 26px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', RED_DEEP, 'center','middle');
+
+        // 绘制神像
+        deityPortrait(portraitX, py0, portraitW, portraitH, g.color, g.name, caishenImg, xishenImg, fushenImg, yangguiImg);
+
+        // 绘制罗盘（与文字中轴线对齐）
+        bagua(baguaX, baguaY, 70, g.dir);
       });
 
       Y += godH + 14;
@@ -3350,7 +3397,7 @@
       // ============ 5. 冲煞条 ============
       var chongH = 60;
       rrect(22, Y, 130, chongH, 4, NAVY, GOLD, 1.5);
-      txt('冲煞', 22+65, Y+chongH/2+1, 'bold 28px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      txt('冲煞', 22+65, Y+chongH/2+1, 'bold 32px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
       rrect(160, Y, W-22-160, chongH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1);
 
       var chongDisplay = chongLine || '—';
@@ -3373,6 +3420,67 @@
 
       Y += chongH + 14;
 
+      // ============ 辅助函数：计算图片实际内容边界（裁切透明/白色边距）============
+      function getContentBounds(img) {
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        var tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(img, 0, 0);
+
+        var imageData = tempCtx.getImageData(0, 0, img.width, img.height);
+        var data = imageData.data;
+
+        var minX = img.width, minY = img.height, maxX = 0, maxY = 0;
+        var found = false;
+
+        // 遍历所有像素，找到非空白区域
+        for (var y = 0; y < img.height; y++) {
+          for (var x = 0; x < img.width; x++) {
+            var i = (y * img.width + x) * 4;
+            var r = data[i];
+            var g = data[i + 1];
+            var b = data[i + 2];
+            var a = data[i + 3];
+
+            // 判断是否为非空白像素：
+            // 1. 透明度 > 30（更严格地排除半透明边缘）
+            // 2. 颜色不是白色/接近白色（更严格的阈值）
+            // 3. 或者是有明显颜色的像素（红色/蓝色印章主体）
+            var isWhitish = (r > 250 && g > 250 && b > 250);
+            var hasColor = (r < 200 || g < 200 || b < 200);
+            var isContent = a > 30 && !isWhitish && hasColor;
+
+            if (isContent) {
+              found = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (!found) {
+          // 如果没有找到内容，返回整张图片
+          return { x: 0, y: 0, width: img.width, height: img.height };
+        }
+
+        // 添加少量padding避免裁切过紧
+        var padding = 2;
+        minX = Math.max(0, minX - padding);
+        minY = Math.max(0, minY - padding);
+        maxX = Math.min(img.width - 1, maxX + padding);
+        maxY = Math.min(img.height - 1, maxY + padding);
+
+        return {
+          x: minX,
+          y: minY,
+          width: maxX - minX + 1,
+          height: maxY - minY + 1
+        };
+      }
+
       // ============ 6. 宜 / 忌 ============
       var yjH = 180;
       rrect(22, Y, W-44, yjH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
@@ -3382,19 +3490,84 @@
       c.setLineDash([]);
       c.restore();
 
-      var stampR = 50;
       var stampY = Y+yjH/2;
-      var rg1 = c.createRadialGradient(80,stampY-6,4, 80,stampY,stampR);
-      rg1.addColorStop(0,'#e34648'); rg1.addColorStop(1,'#9c1726');
-      circle(80, stampY, stampR, rg1, '#6b0d18', 3);
-      circle(80, stampY, stampR-7, null, 'rgba(255,255,255,0.6)', 1.5);
-      txt('宜', 80, stampY, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
 
-      var rg2 = c.createLinearGradient(W-80-stampR, stampY-stampR, W-80+stampR, stampY+stampR);
-      rg2.addColorStop(0, NAVY); rg2.addColorStop(1, NAVY_DARK);
-      circle(W-80, stampY, stampR, rg2, '#06182f', 3);
-      circle(W-80, stampY, stampR-7, null, 'rgba(255,255,255,0.55)', 1.5);
-      txt('忌', W-80, stampY, 'bold 56px "STKaiti","KaiTi",serif', '#fff', 'center','middle');
+      // 目标高度：方框内部高度 - 8px（上下各留4px安全距离）
+      var targetHeight = yjH - 8;
+
+      // 印章安全区域边界（用于文字避障）
+      var yiSafeRight = 22;  // 默认左边界
+      var jiSafeLeft = W - 22;  // 默认右边界
+
+      // 绘制"宜"图标（裁切空白边距后等比例缩放）
+      if(yiIconImg && yiIconImg.complete){
+        // 计算印章主体的实际边界
+        var bounds = getContentBounds(yiIconImg);
+
+        // 以裁切后的主体高度为基准进行等比例缩放
+        var contentAspect = bounds.width / bounds.height;
+        var drawHeight = targetHeight;
+        var drawWidth = drawHeight * contentAspect;
+
+        // "宜"位置：向右移动，放在左侧区域内
+        var yiCenterX = 80 + 30;
+        var yiX = yiCenterX - drawWidth/2;
+        var yiY = Y + 4; // 上边距4px
+
+        // 计算印章右边界 + 安全距离（30px）
+        yiSafeRight = yiX + drawWidth + 30;
+
+        // 使用9参数版本的drawImage裁切绘制
+        // drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
+        c.drawImage(yiIconImg,
+          bounds.x, bounds.y, bounds.width, bounds.height,  // 源图裁切区域
+          yiX, yiY, drawWidth, drawHeight);                  // 目标绘制区域
+      } else {
+        // 如果图片未加载，使用原来的绘制方式
+        var stampR = 50;
+        var rg1 = c.createRadialGradient(80,stampY-6,4, 80,stampY,stampR);
+        rg1.addColorStop(0,'#e34648'); rg1.addColorStop(1,'#9c1726');
+        circle(80, stampY, stampR, rg1, '#6b0d18', 3);
+        circle(80, stampY, stampR-7, null, 'rgba(255,255,255,0.6)', 1.5);
+        txt('宜', 80, stampY, 'bold 64px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', '#fff', 'center','middle');
+        // 后备方案：圆形印章半径50 + 安全距离30
+        yiSafeRight = 80 + 50 + 30;
+      }
+
+      // 绘制"忌"图标（裁切空白边距后等比例缩放）
+      if(jiIconImg && jiIconImg.complete){
+        // 计算印章主体的实际边界
+        var bounds = getContentBounds(jiIconImg);
+
+        // 以裁切后的主体高度为基准进行等比例缩放
+        var contentAspect = bounds.width / bounds.height;
+        var drawHeight = targetHeight;
+        var drawWidth = drawHeight * contentAspect;
+
+        // "忌"位置：向左移动，放在右侧区域内
+        var jiCenterX = W-80 - 30;
+        var jiX = jiCenterX - drawWidth/2;
+        var jiY = Y + 4; // 上边距4px
+
+        // 计算印章左边界 - 安全距离（30px）
+        jiSafeLeft = jiX - 30;
+
+        // 使用9参数版本的drawImage裁切绘制
+        // drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
+        c.drawImage(jiIconImg,
+          bounds.x, bounds.y, bounds.width, bounds.height,  // 源图裁切区域
+          jiX, jiY, drawWidth, drawHeight);                  // 目标绘制区域
+      } else {
+        // 如果图片未加载，使用原来的绘制方式
+        var stampR = 50;
+        var rg2 = c.createLinearGradient(W-80-stampR, stampY-stampR, W-80+stampR, stampY+stampR);
+        rg2.addColorStop(0, NAVY); rg2.addColorStop(1, NAVY_DARK);
+        circle(W-80, stampY, stampR, rg2, '#06182f', 3);
+        circle(W-80, stampY, stampR-7, null, 'rgba(255,255,255,0.55)', 1.5);
+        txt('忌', W-80, stampY, 'bold 64px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', '#fff', 'center','middle');
+        // 后备方案：圆形印章半径50 + 安全距离30
+        jiSafeLeft = (W-80) - 50 - 30;
+      }
 
       function drawList(items, x0, x1, top, color){
         if(!items || !items.length){
@@ -3402,24 +3575,70 @@
           return;
         }
         var maxW = x1 - x0;
-        var perRow = items.length>15 ? 6 : 5;
-        var rowGap = 44;
-        var used = items.slice(0, 18);
-        var fontSize = 22;
+        var fontSize = 32;
         c.font = 'bold '+fontSize+'px "STKaiti","KaiTi","PingFang SC",serif';
-        var perColW = maxW/perRow;
-        for(var i=0;i<used.length;i++){
-          var rr = Math.floor(i/perRow);
-          var cc = i % perRow;
-          var cx0 = x0 + perColW*cc + perColW/2;
-          var cy0 = top + 6 + rr*rowGap;
-          c.fillStyle = color;
-          c.textAlign='center'; c.textBaseline='top';
-          c.fillText(used[i], cx0, cy0);
+        c.fillStyle = color;
+        c.textAlign='center'; c.textBaseline='top';
+
+        // 动态布局参数
+        var wordGap = 20;  // 词与词之间的最小间距（20px）
+        var rowGap = 50;   // 行间距
+        var maxItems = 9;  // 最多显示9个项目
+        var used = items.slice(0, maxItems);
+
+        // 按行分组：根据实际宽度动态分配
+        var rows = [];
+        var currentRow = [];
+        var currentRowWidth = 0;
+
+        for(var i = 0; i < used.length; i++){
+          var word = used[i];
+          var wordWidth = c.measureText(word).width;
+          var needWidth = wordWidth + (currentRow.length > 0 ? wordGap : 0);
+
+          // 检查是否能放入当前行
+          if(currentRow.length === 0 || currentRowWidth + needWidth <= maxW){
+            currentRow.push({text: word, width: wordWidth});
+            currentRowWidth += needWidth;
+          } else {
+            // 当前行已满，开始新行
+            rows.push(currentRow);
+            currentRow = [{text: word, width: wordWidth}];
+            currentRowWidth = wordWidth;
+          }
         }
+        // 添加最后一行
+        if(currentRow.length > 0){
+          rows.push(currentRow);
+        }
+
+        // 绘制每一行
+        rows.forEach(function(row, rowIndex){
+          // 计算这一行的总宽度
+          var totalWidth = 0;
+          row.forEach(function(item, idx){
+            totalWidth += item.width;
+            if(idx < row.length - 1) totalWidth += wordGap;
+          });
+
+          // 居中对齐：计算起始X位置
+          var startX = x0 + (maxW - totalWidth) / 2;
+          var currentX = startX;
+          var y = top + 6 + rowIndex * rowGap;
+
+          // 绘制这一行的每个词
+          row.forEach(function(item, idx){
+            var wordCenterX = currentX + item.width / 2;
+            c.fillText(item.text, wordCenterX, y);
+            currentX += item.width + wordGap;
+          });
+        });
       }
-      drawList(yiArr, 150, W/2-30, Y+30, DARK);
-      drawList(jiArr, W/2+30, W-150, Y+30, DARK);
+      // 文字布局：避开印章安全区域
+      // 左侧"宜"：从印章右边界开始到中线
+      drawList(yiArr, yiSafeRight, W/2-30, Y+15, DARK);
+      // 右侧"忌"：从中线到印章左边界
+      drawList(jiArr, W/2+30, jiSafeLeft, Y+15, DARK);
 
       Y += yjH + 14;
 
@@ -3428,7 +3647,7 @@
       rrect(22, Y, W-44, hrH, 4, 'rgba(255, 255, 255, 0.35)', NAVY, 1.5);
       var hrTitW = 220;
       rrect(W/2-hrTitW/2, Y-22, hrTitW, 44, 8, NAVY, GOLD, 2);
-      txt('今日时运', W/2, Y, 'bold 26px "STKaiti","KaiTi",serif', GOLD, 'center','middle');
+      txt('今日时运', W/2, Y, 'bold 28px "STKaiti","KaiTi","SimKai","FZKai-Z03S",serif', GOLD, 'center','middle');
 
       var pad = 30;
       var tableY = Y + 36;

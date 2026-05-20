@@ -2,6 +2,10 @@
 
 A full-stack web application for a New Zealand-based Chinese temple, featuring an interactive Chinese almanac (黄历) system, AI-powered fortune-telling Q&A, religious service bookings, and user profile management.
 
+## Live Demo
+
+🔗 **[https://nz-temple.vercel.app](https://nz-temple.vercel.app)**
+
 ---
 
 ## Screenshots
@@ -65,38 +69,31 @@ The application addresses the unique needs of Southern Hemisphere users by provi
 ## Key Features
 
 ### Chinese Almanac System
-- Four display modes: Basic/Southern Hemisphere/Personalized Northern/Personalized Southern
+- Four display modes with Southern Hemisphere astronomical corrections
 - 12 time periods (时辰) with fortune ratings and activity recommendations
 - PNG export for downloadable almanac images
-- Daily updates with automatic calculation of auspicious/inauspicious activities
 
 ### BaZi (八字) Integration
-- Three input methods: birthdate calculation, manual stem-branch input, or profile retrieval
+- Three input methods: birthdate calculation, manual input, or profile retrieval
 - Personal fortune overlay on daily almanac
 - Persistent storage in user profiles
 
 ### AI Fortune Q&A
-- 13 pre-configured questions across 3 categories
 - Rule-based answer generation using daily almanac data
 - Fully client-side logic with no external API dependencies
 
 ### Service Booking
 - Ritual ceremony bookings with tiered pricing
-- Offering purchases (元宝 - joss paper)
 - Email confirmation via Formspree integration
-- Special event scheduling (e.g., Qingming Festival ceremonies)
 
 ### User System
 - Registration and authentication via Supabase Auth
 - Profile management with BaZi storage
 - Role-based access control (admin dashboard)
-- Password reset functionality
 
 ### Merit Board
 - Public contribution display with name masking
-- Auto-scrolling animation
 - Bilingual support (Chinese/English)
-- Admin-controlled visibility
 
 ---
 

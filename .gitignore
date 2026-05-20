@@ -47,6 +47,46 @@ newtemple.jpg
 财神日历*.pdf
 财神黄历*.png
 
+# Images folder - exclude Chinese-named files and temporary files
+images/*财神*.png
+images/*财神*.pdf
+images/*财神*.zip
+images/*财神*.jpg
+images/Screenshot*.png
+images/*三源*.png
+images/*三源*.jpg
+images/*今日*.png
+images/*今日*.jpg
+images/*冲煞*.png
+images/*参考*.jpg
+images/*可以*.jpg
+images/*喜神*.png
+images/*喜神*.jpg
+images/*四神*.jpg
+images/*固定*.png
+images/*外边*.jpg
+images/*太极*.png
+images/*太极*.jpg
+images/*字体*.jpg
+images/*完整*.png
+images/*宜*.png
+images/*宜*.jpg
+images/*忌*.png
+images/*手机*.jpg
+images/*拆卸*.jpg
+images/*福神*.png
+images/*福神*.jpg
+images/*阳贵*.png
+images/*阳贵*.jpg
+images/*罗盘*.jpg
+images/*诸神*.png
+images/*现在*.jpg
+images/*现成*.jpg
+images/*目前*.png
+images/*超出*.jpg
+images/*顶部*.jpg
+images/*顶部*.png
+
 # Additional standard ignores
 *.log
 *.swp

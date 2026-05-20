@@ -109,11 +109,11 @@ The application addresses the unique needs of Southern Hemisphere users by provi
 
 ### API Endpoints
 
-Core endpoints for almanac calculations, BaZi analysis, and personalized fortune readings. See `api/` folder for implementation details.
+8 Python serverless functions handle almanac calculations, BaZi analysis, and personalized fortune readings. Key endpoints include daily almanac data, personal fortune overlays, and AI Q&A generation.
 
 ### Database Schema
 
-PostgreSQL database with tables for user profiles, bookings, inventory, merit board, and site settings. Row-level security policies protect user data. See `supabase-setup.sql` for complete schema.
+PostgreSQL database with row-level security policies. Core tables: user profiles, bookings, inventory, merit board, and site settings.
 
 ---
 

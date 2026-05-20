@@ -6,3 +6,56 @@ __pycache__/
 .env
 .env.local
 *.bak
+
+# Test files (keep local, don't push to GitHub)
+test_*.html
+test_*.py
+*-test.html
+*-debug.html
+sanyuan_daozhang.html
+sanyuan_daozhang_enhanced.html
+sanyuan_final.html
+calendar_demo.html
+calendar_integration_code.html
+calendar_preview.html
+master-template-debug.html
+
+# Internal documentation (keep local)
+CALENDAR_SYSTEM_SUMMARY.md
+QUICKSTART.md
+README_CALENDAR.md
+AUTH-SETUP-GUIDE.md
+S3-CONFIG-GUIDE.md
+S3_CORS_SETUP.md
+VERCEL_ENV_SETUP.md
+CORS_配置指南.md
+
+# Calendar generation scripts (keep local)
+generate_calendar_daily.py
+generate_sanyuan_calendar.py
+assemble_calendar_template.py
+auto_generate_daily_calendar.py
+preview_calendar.py
+generate_integration_code.py
+
+# Business/private files (keep local)
+*.pptx
+push.command
+1941775034228_.pic.jpg
+newtemple.jpg
+小红书.jpg
+财神日历*.pdf
+财神黄历*.png
+
+# Additional standard ignores
+*.log
+*.swp
+*.swo
+*~
+.vscode/
+node_modules/
+dist/
+build/
+.cache/
+*.tmp
+*.temp

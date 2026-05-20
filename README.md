@@ -42,7 +42,6 @@ The application addresses the unique needs of Southern Hemisphere users by provi
 
 **Python Libraries**
 - `lunar-python` - Chinese lunar calendar calculations
-- Standard library for date/time operations
 
 **Deployment**
 - Vercel (frontend + serverless functions)
@@ -52,39 +51,35 @@ The application addresses the unique needs of Southern Hemisphere users by provi
 
 ## Key Features
 
-### 1. Chinese Almanac System
-- **Four Display Modes:**
-  - Basic Northern Hemisphere almanac
-  - Southern Hemisphere corrected almanac (mirrored directional guidance)
-  - Personalized Northern Hemisphere (with user BaZi integration)
-  - Personalized Southern Hemisphere
-- **12 Time Periods (时辰)** with fortune ratings and activity recommendations
-- **PNG Export** - Generate downloadable almanac images
-- **Daily Updates** - Automatic calculation of auspicious/inauspicious activities
+### Chinese Almanac System
+- Four display modes: Basic/Southern Hemisphere/Personalized Northern/Personalized Southern
+- 12 time periods (时辰) with fortune ratings and activity recommendations
+- PNG export for downloadable almanac images
+- Daily updates with automatic calculation of auspicious/inauspicious activities
 
-### 2. BaZi (八字) Integration
+### BaZi (八字) Integration
 - Three input methods: birthdate calculation, manual stem-branch input, or profile retrieval
 - Personal fortune overlay on daily almanac
 - Persistent storage in user profiles
 
-### 3. AI Fortune Q&A
+### AI Fortune Q&A
 - 13 pre-configured questions across 3 categories
 - Rule-based answer generation using daily almanac data
-- No external API dependencies - fully client-side logic
+- Fully client-side logic with no external API dependencies
 
-### 4. Service Booking
+### Service Booking
 - Ritual ceremony bookings with tiered pricing
 - Offering purchases (元宝 - joss paper)
 - Email confirmation via Formspree integration
 - Special event scheduling (e.g., Qingming Festival ceremonies)
 
-### 5. User System
+### User System
 - Registration and authentication via Supabase Auth
 - Profile management with BaZi storage
 - Role-based access control (admin dashboard)
 - Password reset functionality
 
-### 6. Merit Board
+### Merit Board
 - Public contribution display with name masking
 - Auto-scrolling animation
 - Bilingual support (Chinese/English)
@@ -95,33 +90,17 @@ The application addresses the unique needs of Southern Hemisphere users by provi
 ## Architecture
 
 ### Frontend Structure
-- **Static HTML pages** - Each major feature has a dedicated page
-- **Shared navigation** - Consistent header/sidebar across all pages
-- **Language toggle** - Chinese/English switching via `localStorage`
-- **Supabase client** - Shared authentication state in `supabase.js`
+- Static HTML pages with shared navigation
+- Bilingual UI (Chinese/English) via `localStorage`
+- Shared authentication state in `supabase.js`
 
 ### API Endpoints
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/day` | POST | Fetch basic daily almanac data |
-| `/api/personal_day_birth` | POST | Generate personalized almanac from birthdate |
-| `/api/personal_day_manual` | POST | Generate personalized almanac from manual BaZi input |
-| `/api/bazi` | POST | Calculate BaZi from birthdate |
-| `/api/wardrobe` | POST | Five-element clothing color recommendations |
-| `/api/ai_qa` | POST | AI Q&A response generation |
-| `/api/get_video_url` | POST | Generate signed S3 URLs for video content |
+Core endpoints for almanac calculations, BaZi analysis, and personalized fortune readings. See `api/` folder for implementation details.
 
 ### Database Schema
 
-**Tables:**
-- `member_profiles` - User information and BaZi data
-- `ritual_bookings` - Service booking records
-- `yuanbao_inventory` - Offering inventory tracking
-- `merit_board` - Public contribution display
-- `site_settings` - Key-value configuration storage
-
-See `supabase-setup.sql` for complete schema.
+PostgreSQL database with tables for user profiles, bookings, inventory, merit board, and site settings. Row-level security policies protect user data. See `supabase-setup.sql` for complete schema.
 
 ---
 
@@ -134,6 +113,7 @@ See `supabase-setup.sql` for complete schema.
 │   ├── bazi.py            # BaZi calculation endpoint
 │   └── ...
 ├── calendar_modules/       # Calendar generation utilities
+├── docs/                   # Internal documentation
 ├── images/                 # Application assets
 ├── screenshots/            # README documentation images
 ├── index.html              # Homepage with merit board
@@ -160,7 +140,6 @@ See `supabase-setup.sql` for complete schema.
 
 ### Prerequisites
 - Python 3.8+
-- Node.js (for Vercel CLI, optional)
 - Supabase account
 - AWS S3 bucket (for video content)
 
@@ -189,17 +168,9 @@ See `supabase-setup.sql` for complete schema.
    # Server runs on http://127.0.0.1:5001
    ```
 
-5. **Access the application**
-   - Open `http://127.0.0.1:5001` in your browser
-   - Note: Port 5001 is used because macOS reserves port 5000 for AirPlay
-
 ### Deployment to Vercel
 
 ```bash
-# Install Vercel CLI (if not already installed)
-npm install -g vercel
-
-# Deploy
 vercel --prod
 ```
 
@@ -216,9 +187,6 @@ Create a `.env` file in the root directory:
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_REGION=ap-southeast-2
-
-# Supabase JWT Secret (optional, for token verification)
-# SUPABASE_JWT_SECRET=your_jwt_secret
 ```
 
 **Note:** Supabase public credentials are configured in `supabase.js` and are safe for client-side use.

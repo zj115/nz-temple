@@ -4,6 +4,19 @@ A full-stack web application for a New Zealand-based Chinese temple, featuring a
 
 ---
 
+## Screenshots
+
+### Homepage with Merit Board
+<img src="./screenshots/homepage-merit-board.jpg" width="100%" alt="Homepage with Merit Board" />
+
+### AI Fortune Q&A System
+<img src="./screenshots/ai-fortune-qa.jpg" width="100%" alt="AI Fortune Q&A" />
+
+### Course Dashboard
+<img src="./screenshots/feng-shui-course-dashboard.jpg" width="100%" alt="Course Dashboard" />
+
+---
+
 ## Overview
 
 This project serves the Chinese community in New Zealand by providing:
@@ -190,19 +203,6 @@ AWS_REGION=ap-southeast-2
 ```
 
 **Note:** Supabase public credentials are configured in `supabase.js` and are safe for client-side use.
-
----
-
-## Screenshots
-
-### Homepage with Merit Board
-<img src="./screenshots/homepage-merit-board.jpg" width="100%" alt="Homepage with Merit Board" />
-
-### AI Fortune Q&A System
-<img src="./screenshots/ai-fortune-qa.jpg" width="100%" alt="AI Fortune Q&A" />
-
-### Course Dashboard
-<img src="./screenshots/feng-shui-course-dashboard.jpg" width="100%" alt="Course Dashboard" />
 
 ---
 

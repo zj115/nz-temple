@@ -1,249 +1,136 @@
-# NZ Temple - Chinese Almanac & Temple Services Platform
+# NZ Temple — Almanac & Temple Services Platform
 
-A full-stack web application for a New Zealand-based Chinese temple, featuring an interactive Chinese almanac (黄历) system, AI-powered fortune-telling Q&A, religious service bookings, and user profile management.
+A full-stack web application for a New Zealand-based Chinese temple. The platform offers a daily Chinese almanac (黄历), a rule-based fortune Q&A assistant, religious service bookings, a merit board, and personal user profiles with BaZi (八字) calculations.
 
-## Live Demo
-
-🔗 **[https://nz-temple.vercel.app](https://nz-temple.vercel.app)**
-
----
-
-## Screenshots
-
-### Homepage with Merit Board
-<img src="./screenshots/homepage-merit-board.jpg" width="100%" alt="Homepage with Merit Board" />
-
-### AI Fortune Q&A System
-<img src="./screenshots/ai-fortune-qa.jpg" width="100%" alt="AI Fortune Q&A" />
-
-### Course Dashboard
-<img src="./screenshots/feng-shui-course-dashboard.jpg" width="100%" alt="Course Dashboard" />
-
----
+**Live site:** https://nz-temple.vercel.app
 
 ## Overview
 
-This project serves the Chinese community in New Zealand by providing:
+The application serves the Chinese community in New Zealand, with a focus on solving a small but real problem: standard almanacs are calculated for the Northern Hemisphere, so directional guidance (e.g. 财神方位) is wrong south of the equator. This project applies Southern Hemisphere astronomical corrections and presents the almanac in a way that's accurate for users in NZ.
 
-- **Personalized Chinese Almanac** - Daily fortune calendar with Southern Hemisphere astronomical corrections
-- **AI Fortune Advisor** - Rule-based Q&A system providing guidance based on traditional Chinese almanac principles
-- **Service Booking System** - Online booking for religious ceremonies and offerings
-- **Merit Board** - Public display of temple contributions with privacy protection
-- **User Profiles** - Personal BaZi (八字) calculation and storage for customized fortune readings
+Around the almanac sit the supporting features the temple's users actually want: ceremony bookings, a small online shop, personal profile storage, and a fortune Q&A that draws on the day's almanac data rather than calling out to an external model.
 
-The application addresses the unique needs of Southern Hemisphere users by providing geographically-corrected directional guidance (财神方位) and localized calendar calculations.
+## Screenshots
 
----
+![Homepage with merit board](screenshots/homepage-merit-board.jpg)
+*Homepage with the public merit board and bilingual navigation.*
+
+![Fortune Q&A](screenshots/ai-fortune-qa.jpg)
+*Rule-based fortune Q&A drawing on the current day's almanac data.*
+
+![Course dashboard](screenshots/feng-shui-course-dashboard.jpg)
+*Course dashboard for Feng Shui content.*
 
 ## Tech Stack
 
-**Frontend**
-- HTML5, CSS3, JavaScript (Vanilla JS)
-- Responsive design with mobile-first approach
-- Canvas API for almanac image generation
-- LocalStorage for client-side caching
+**Frontend** — HTML5, CSS3, and vanilla JavaScript. Canvas API for almanac PNG export. `localStorage` for client-side caching and language preference.
 
-**Backend**
-- Vercel Serverless Functions (Python)
-- Flask (local development only)
-- RESTful API architecture
+**Backend** — Python serverless functions on Vercel. Flask is used only for local development. `lunar-python` handles Chinese lunar calendar calculations.
 
-**Database & Authentication**
-- Supabase (PostgreSQL)
-- Supabase Auth for user management
-- Row-level security policies
+**Data & auth** — Supabase (PostgreSQL with row-level security), Supabase Auth for users.
 
-**External Services**
-- AWS S3 for media storage
-- Formspree for email notifications
-
-**Python Libraries**
-- `lunar-python` - Chinese lunar calendar calculations
-
-**Deployment**
-- Vercel (frontend + serverless functions)
-- Automatic deployments from main branch
-
----
+**External services** — AWS S3 for media, Formspree for booking email notifications.
 
 ## Key Features
 
-### Chinese Almanac System
-- Four display modes with Southern Hemisphere astronomical corrections
-- 12 time periods (时辰) with fortune ratings and activity recommendations
-- PNG export for downloadable almanac images
+**Almanac system** — Four display modes, Southern Hemisphere astronomical corrections, 12 time periods (时辰) with fortune ratings and activity guidance, and PNG export so users can save the day's almanac to their phone.
 
-### BaZi (八字) Integration
-- Three input methods: birthdate calculation, manual input, or profile retrieval
-- Personal fortune overlay on daily almanac
-- Persistent storage in user profiles
+**BaZi integration** — Three input paths: calculate from a birth date, enter manually, or pull from a saved profile. Personal fortune overlays on top of the daily almanac.
 
-### AI Fortune Q&A
-- Rule-based answer generation using daily almanac data
-- Fully client-side logic with no external API dependencies
+**Fortune Q&A** — A rule-based answer engine that reads the day's almanac data and produces guidance text. Entirely client-side logic; no third-party model calls.
 
-### Service Booking
-- Ritual ceremony bookings with tiered pricing
-- Email confirmation via Formspree integration
+**Service booking** — Tiered pricing for ritual ceremonies, with email confirmation via Formspree.
 
-### User System
-- Registration and authentication via Supabase Auth
-- Profile management with BaZi storage
-- Role-based access control (admin dashboard)
+**User system** — Supabase Auth, role-based access control, profile-based BaZi storage.
 
-### Merit Board
-- Public contribution display with name masking
-- Bilingual support (Chinese/English)
-
----
+**Merit board** — Public contribution display with automatic name masking, bilingual (Chinese/English).
 
 ## Architecture
 
-### Frontend Structure
-- Static HTML pages with shared navigation
-- Bilingual UI (Chinese/English) via `localStorage`
-- Shared authentication state in `supabase.js`
+The frontend is a set of static HTML pages with shared navigation and a bilingual UI that flips through `localStorage`. The backend is eight Python serverless functions on Vercel, each handling a specific calculation or query — daily almanac data, BaZi calculation, personal fortune overlays, Q&A responses, and so on.
 
-### API Endpoints
-
-8 Python serverless functions handle almanac calculations, BaZi analysis, and personalized fortune readings. Key endpoints include daily almanac data, personal fortune overlays, and AI Q&A generation.
-
-### Database Schema
-
-PostgreSQL database with row-level security policies. Core tables: user profiles, bookings, inventory, merit board, and site settings.
-
----
+Supabase holds user profiles, bookings, inventory, merit board entries, and site settings. Row-level security policies keep personal data scoped to its owner. Media files live in S3.
 
 ## Project Structure
 
 ```
-├── api/                    # Vercel serverless functions
-│   ├── _almanac.py        # Shared almanac calculation logic
-│   ├── day.py             # Basic almanac endpoint
-│   ├── bazi.py            # BaZi calculation endpoint
+nz-temple-vercel-static/
+├── api/                       # Vercel serverless functions (Python)
+│   ├── _almanac.py            # Shared almanac calculation logic
+│   ├── day.py
+│   ├── bazi.py
 │   └── ...
-├── calendar_modules/       # Calendar generation utilities
-├── docs/                   # Internal documentation
-├── images/                 # Application assets
-├── screenshots/            # README documentation images
-├── index.html              # Homepage with merit board
-├── calendar.html           # Almanac system
-├── booking.html            # Service booking interface
-├── wealth-ai.html          # AI Q&A system
-├── login.html              # Authentication
-├── profile.html            # User profile management
-├── admin.html              # Admin dashboard
-├── shop.html               # E-commerce page
-├── courses.html            # Course information
-├── fortune.html            # Fortune-telling page
-├── southern.html           # Southern Hemisphere explanation
-├── style.css               # Global styles
-├── supabase.js             # Supabase client configuration
-├── app.py                  # Local development server (Flask)
-├── requirements.txt        # Python dependencies
-└── vercel.json             # Vercel deployment configuration
+├── calendar_modules/          # Calendar generation utilities
+├── docs/                      # Internal documentation
+├── images/
+├── screenshots/
+├── index.html                 # Homepage with merit board
+├── calendar.html              # Almanac
+├── booking.html               # Service booking
+├── wealth-ai.html             # Fortune Q&A
+├── login.html
+├── profile.html
+├── admin.html
+├── shop.html
+├── courses.html
+├── fortune.html
+├── southern.html              # Southern Hemisphere explanation page
+├── style.css
+├── supabase.js
+├── app.py                     # Local development server only
+├── requirements.txt
+└── vercel.json
 ```
 
----
+## Setup
 
-## Installation and Setup
-
-### Prerequisites
-- Python 3.8+
-- Supabase account
-- AWS S3 bucket (for video content)
-
-### Local Development
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/zj115/nz-temple-vercel-static.git
-   cd nz-temple-vercel-static
-   ```
-
-2. **Install Python dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your AWS credentials
-   ```
-
-4. **Run local development server**
-   ```bash
-   python app.py
-   # Server runs on http://127.0.0.1:5001
-   ```
-
-### Deployment to Vercel
+Prerequisites: Python 3.8+, a Supabase project, and an S3 bucket for media.
 
 ```bash
-vercel --prod
+git clone https://github.com/zj115/nz-temple-vercel-static.git
+cd nz-temple-vercel-static
+pip install -r requirements.txt
+cp .env.example .env   # add AWS credentials
+python app.py          # local server at http://127.0.0.1:5001
 ```
 
-The `app.py` Flask server is only for local development and does not affect Vercel deployment.
-
----
+Deploy with `vercel --prod`. The Flask server in `app.py` is only used locally and doesn't affect Vercel deployment.
 
 ## Environment Variables
 
-Create a `.env` file in the root directory:
-
-```env
-# AWS S3 credentials (for video content)
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+```
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 AWS_REGION=ap-southeast-2
 ```
 
-**Note:** Supabase public credentials are configured in `supabase.js` and are safe for client-side use.
+Supabase public keys are configured in `supabase.js` — these are anon keys with restricted permissions, which is the intended use.
 
----
+## Development Summary
 
-## My Contribution
+I built this end-to-end. A few notes on the interesting parts:
 
-I developed this full-stack application from scratch, handling:
+The Southern Hemisphere correction is the reason this project exists. Standard almanac libraries assume Northern Hemisphere astronomy, so directional guidance comes out wrong south of the equator. I layered corrections on top of `lunar-python` so the daily 财神方位 and related guidance is accurate for NZ users. There's a dedicated page (`southern.html`) explaining this to users who notice the difference.
 
-- **Frontend Development** - Built all HTML/CSS/JS pages with responsive design and bilingual support
-- **Backend API Design** - Implemented 8 Python serverless functions for almanac calculations and data processing
-- **Database Architecture** - Designed PostgreSQL schema with Supabase integration and row-level security
-- **Chinese Almanac Logic** - Integrated `lunar-python` library and implemented Southern Hemisphere astronomical corrections
-- **Authentication System** - Configured Supabase Auth with role-based access control
-- **Canvas Rendering** - Built almanac image generation system for PNG exports
-- **Deployment** - Configured Vercel deployment with serverless function routing
+The fortune Q&A is a rule-based engine, not a generative model. It reads the day's almanac data — auspicious activities, taboo activities, time periods — and assembles guidance text using a small rule set. It's deliberately deterministic so the same question on the same day produces a consistent answer.
 
----
+The almanac PNG export uses the Canvas API to render the calendar as an image users can save and share. The merit board masks names automatically so contributors can see their own entry without exposing other users' full names.
+
+The backend is split into eight small serverless functions on Vercel so each endpoint has a clear scope. Supabase row-level security policies keep personal data scoped to its owner.
 
 ## Security and Privacy
 
-- All sensitive credentials are stored in environment variables and excluded from version control
-- Supabase Row Level Security (RLS) policies protect user data
-- Public API keys in `supabase.js` are anon keys with restricted permissions
-- User names on merit board are automatically masked for privacy
-- No production secrets or customer data are included in this repository
-
----
+Sensitive credentials are kept out of version control and managed through environment variables. Row-level security policies on Supabase tables restrict personal data to its owner. Names on the merit board are masked automatically before display. Public Supabase keys are anon keys with limited permissions.
 
 ## Future Improvements
 
-- Add automated testing for almanac calculation accuracy
-- Implement payment gateway integration for online donations
-- Add real-time notifications for booking confirmations
-- Expand AI Q&A system with more question categories
-- Create mobile app version using React Native
-- Add calendar event export (iCal format)
-
----
-
-## Notes
-
-This repository is shared for portfolio and demonstration purposes. Some business-specific details have been generalized to protect client privacy. The application is deployed and actively used by a New Zealand-based organization.
-
----
+- Automated tests for almanac calculation accuracy.
+- Payment gateway integration for online donations.
+- Real-time booking confirmations.
+- Expanding the Q&A rule set to cover more question categories.
+- Calendar event export (iCal).
+- A mobile companion app.
 
 ## License
 
-This repository is shared for portfolio and demonstration purposes only.
+*Shared for portfolio and demonstration purposes only.*

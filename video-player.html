@@ -342,12 +342,6 @@
                 padding: 12px;
                 font-size: 20px;
             }
-
-            /* 移动端：视频播放器支持内联播放 */
-            .video-player {
-                -webkit-playsinline: true;
-                playsinline: true;
-            }
         }
 
         @media (max-width: 480px) {
@@ -412,10 +406,14 @@
             }
         }
 
-        /* iOS Safari 视频全屏优化 */
+        /* iOS Safari 视频优化 */
         @supports (-webkit-touch-callout: none) {
             .video-player {
                 -webkit-tap-highlight-color: transparent;
+            }
+
+            .video-player-wrapper {
+                -webkit-overflow-scrolling: touch;
             }
         }
 
@@ -454,7 +452,7 @@
         <!-- 左侧视频区 -->
         <div class="video-main">
             <div class="video-player-wrapper">
-                <video id="videoPlayer" class="video-player" controls autoplay playsinline webkit-playsinline x5-playsinline x-webkit-airplay="allow" x5-video-player-type="h5" x5-video-player-fullscreen="true">
+                <video id="videoPlayer" class="video-player" controls playsinline webkit-playsinline x5-playsinline x-webkit-airplay="allow" x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="metadata">
                     您的浏览器不支持视频播放。
                 </video>
                 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
@@ -706,11 +704,15 @@
                 video.src = signedUrl;
                 video.load();
 
-                // 自动播放
-                try {
-                    await video.play();
-                } catch (e) {
-                    console.log('自动播放被阻止，需要用户交互');
+                // 移动端自动播放（需要用户交互后才能成功）
+                // 桌面端尝试自动播放
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (!isMobile) {
+                    try {
+                        await video.play();
+                    } catch (e) {
+                        console.log('自动播放被阻止，需要用户交互');
+                    }
                 }
 
                 hideLoading();

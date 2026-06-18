@@ -101,11 +101,16 @@ class handler(BaseHTTPRequestHandler):
                 self._send_json(500, {'error': 's3_client_failed', 'detail': str(e)})
                 return
 
-            # Generate presigned URL
+            # Generate presigned URL with proper Content-Type for mobile compatibility
             try:
                 presigned_url = s3_client.generate_presigned_url(
                     'get_object',
-                    Params={'Bucket': bucket_name, 'Key': object_key},
+                    Params={
+                        'Bucket': bucket_name,
+                        'Key': object_key,
+                        'ResponseContentType': 'video/mp4',
+                        'ResponseCacheControl': 'max-age=3600'
+                    },
                     ExpiresIn=expires_in
                 )
                 print(f"Presigned URL generated: {presigned_url[:100]}...", file=sys.stderr)

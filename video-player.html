@@ -548,10 +548,18 @@
             // 加载视频
             await loadVideo(courseId);
 
-            // 异步生成所有缩略图（不阻塞视频播放）
-            generateAllThumbnails().catch(err => {
-                console.error('生成缩略图失败:', err);
-            });
+            // 手机浏览器对并发视频请求限制严格。批量读取 29 个视频生成缩略图
+            // 会与当前播放争抢连接，因此只在桌面端空闲后执行。
+            if (!isMobileDevice()) {
+                const startThumbnails = () => generateAllThumbnails().catch(err => {
+                    console.error('生成缩略图失败:', err);
+                });
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(startThumbnails, { timeout: 3000 });
+                } else {
+                    setTimeout(startThumbnails, 1500);
+                }
+            }
         }
 
         // 渲染播放列表
@@ -559,7 +567,7 @@
             const container = document.getElementById('playlistItems');
             container.innerHTML = FENG_SHUI_COURSES.map(course => `
                 <div class="playlist-item ${currentCourse?.id === course.id ? 'active' : ''}"
-                     onclick="loadVideo(${course.id})"
+                     onclick="loadVideo(${course.id}, true)"
                      data-course-id="${course.id}">
                     <div class="playlist-item-index">${course.id}</div>
                     <div class="playlist-item-thumbnail loading" id="thumb-${course.id}">
@@ -661,7 +669,12 @@
         }
 
         // 加载视频
-        async function loadVideo(courseId) {
+        function isMobileDevice() {
+            return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                (navigator.maxTouchPoints > 1 && window.matchMedia('(max-width: 1024px)').matches);
+        }
+
+        async function loadVideo(courseId, userInitiated = false) {
             const course = FENG_SHUI_COURSES.find(c => c.id === courseId);
             if (!course) {
                 showError('课程不存在');
@@ -701,13 +714,14 @@
 
                 // 加载视频
                 const video = document.getElementById('videoPlayer');
+                video.pause();
+                video.removeAttribute('src');
                 video.src = signedUrl;
                 video.load();
 
-                // 移动端自动播放（需要用户交互后才能成功）
-                // 桌面端尝试自动播放
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (!isMobile) {
+                // 手机端首次进入时保留原生播放按钮；用户从播放列表点选时，
+                // 该点击属于有效手势，可以直接开始播放。
+                if (!isMobileDevice() || userInitiated) {
                     try {
                         await video.play();
                     } catch (e) {
@@ -775,7 +789,7 @@
         // 监听视频播放结束，自动播放下一集
         document.getElementById('videoPlayer').addEventListener('ended', () => {
             if (currentCourse && currentCourse.id < FENG_SHUI_COURSES.length) {
-                loadVideo(currentCourse.id + 1);
+                loadVideo(currentCourse.id + 1, true);
             }
         });
 

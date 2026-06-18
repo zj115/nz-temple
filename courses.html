@@ -1104,10 +1104,16 @@
           console.log('[课程卡片] 点击事件触发:', course.titleZh);
           e.preventDefault();
           e.stopPropagation();
+          // 免费课程直接使用同步导航。iOS/微信内置浏览器会阻止在异步
+          // getSession() 完成后的跳转；播放页本身仍会检查登录状态。
+          if (!course.locked) {
+            const courseIndex = FENG_SHUI_COURSES.indexOf(course) + 1;
+            window.location.assign('video-player.html?id=' + courseIndex);
+            return;
+          }
           openCourse(course);
         };
         el.addEventListener('click', handler);
-        el.addEventListener('touchend', handler); // iOS 触摸事件
         el.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();

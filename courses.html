@@ -564,6 +564,8 @@
     background: rgba(255,255,255,.03);
     cursor: pointer;
     transition: transform .15s ease, border-color .15s, box-shadow .15s;
+    -webkit-tap-highlight-color: rgba(255,213,122,.15);
+    touch-action: manipulation;
   }
   .course-card:hover {
     transform: translateY(-2px);
@@ -931,10 +933,17 @@
   // Helpers
   // ────────────────────────────────────────────────────────────────
 
-  // 获取当前会话
+  // 获取当前会话（带超时保护）
   async function getSession() {
     try {
-      const { data: { session } } = await _sb.auth.getSession();
+      // 添加 3 秒超时保护，避免 iOS 上卡住
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('getSession timeout')), 3000)
+      );
+
+      const sessionPromise = _sb.auth.getSession();
+
+      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
       return session;
     } catch (error) {
       console.error('获取会话失败:', error);
@@ -1091,10 +1100,19 @@
         const id = el.getAttribute('data-course-id');
         const course = FENG_SHUI_COURSES.find(c => c.id === id);
         if (!course) return;
-        const handler = () => openCourse(course);
+        const handler = (e) => {
+          console.log('[课程卡片] 点击事件触发:', course.titleZh);
+          e.preventDefault();
+          e.stopPropagation();
+          openCourse(course);
+        };
         el.addEventListener('click', handler);
+        el.addEventListener('touchend', handler); // iOS 触摸事件
         el.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handler(e);
+          }
         });
       });
     }
@@ -1243,29 +1261,40 @@
 
     // Open the right modal based on access
     window.openCourse = async function(course) {
-      const session = await getSession();
+      console.log('[openCourse] 开始处理课程:', course.titleZh);
 
-      if (!session) {
-        // 未登录 → 显示登录提示弹窗
-        lockedTitle.innerHTML =
-          '<span class="lang-zh">'+ course.titleZh +'</span>' +
-          '<span class="lang-en">'+ course.titleEn +'</span>';
-        openModal(lockedModal);
-        return;
+      try {
+        const session = await getSession();
+        console.log('[openCourse] Session 状态:', session ? '已登录' : '未登录');
+
+        if (!session) {
+          // 未登录 → 显示登录提示弹窗
+          console.log('[openCourse] 显示登录弹窗');
+          lockedTitle.innerHTML =
+            '<span class="lang-zh">'+ course.titleZh +'</span>' +
+            '<span class="lang-en">'+ course.titleEn +'</span>';
+          openModal(lockedModal);
+          return;
+        }
+
+        if (course.locked) {
+          // 已登录但课程锁定 → 显示付费提示（未来扩展）
+          console.log('[openCourse] 显示付费弹窗');
+          lockedTitle.innerHTML =
+            '<span class="lang-zh">'+ course.titleZh +' - 付费课程</span>' +
+            '<span class="lang-en">'+ course.titleEn +' - Premium</span>';
+          openModal(lockedModal);
+          return;
+        }
+
+        // 已登录且有权限 → 跳转到专业播放页面
+        const courseIndex = FENG_SHUI_COURSES.indexOf(course) + 1;
+        console.log('[openCourse] 跳转到视频播放页面, ID:', courseIndex);
+        window.location.href = `video-player.html?id=${courseIndex}`;
+      } catch (error) {
+        console.error('[openCourse] 错误:', error);
+        alert('加载失败，请刷新页面重试 / Failed to load, please refresh\n\n' + error.message);
       }
-
-      if (course.locked) {
-        // 已登录但课程锁定 → 显示付费提示（未来扩展）
-        lockedTitle.innerHTML =
-          '<span class="lang-zh">'+ course.titleZh +' - 付费课程</span>' +
-          '<span class="lang-en">'+ course.titleEn +' - Premium</span>';
-        openModal(lockedModal);
-        return;
-      }
-
-      // 已登录且有权限 → 跳转到专业播放页面
-      const courseIndex = FENG_SHUI_COURSES.indexOf(course) + 1;
-      window.location.href = `video-player.html?id=${courseIndex}`;
     };
 
     function closeVideoModal() {
